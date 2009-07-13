@@ -23,7 +23,6 @@ LIBRARIES = \
     $(LIBRARY_PATH)/libCharFrequency.so
 
 LD_LIBS = \
-    -lstdc++ \
     -lCharFrequency
 
 DEFINES =
@@ -60,7 +59,7 @@ $(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.c $(INCLUDE_PATH)/%.h
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(LIBRARY_PATH)/lib%.so: $(OBJECT_PATH)/%.o
-	$(CC) $(CFLAGS) -shared -o $@ $<
+	$(CC) $(CFLAGS) -shared -o $@ $< -lstdc++
 
 # Use - before the command to ignore error.
 
