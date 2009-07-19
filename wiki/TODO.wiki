@@ -1,0 +1,6 @@
+#summary TODO List
+#labels Deprecated
+
+  * Use ncurses instead of argp as console UI
+  * Restructuring class hierarchies, UML diagrams
+  * Directories planning
