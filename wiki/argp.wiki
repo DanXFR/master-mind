@@ -17,7 +17,7 @@ const char * argp_program_bug_address
 {{{
 const char * argp_program_version
 }}}
-  Will add '--version' option when parsing with argp_parse, and the defined string will be printed. Or set the _argp_program_version_hook_ to a function of which the prototype is as follow:
+  Will add '--version' option when parsing with argp_parse, and the defined string will be printed. Or set the _argp_program_version_hook_ to a function which has the type signature as follow:
 
 {{{
 void print-version (FILE *stream, struct argp_state *state)
