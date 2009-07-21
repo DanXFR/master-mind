@@ -3,8 +3,10 @@
 /// @brief Main Entrance of FrequencyAnalyzer (CLI-based)
 ///
 /// Related Files:
+/// @li CharFrequency.h - Character Frequency Class Declaration
+/// @li CharFrequency.cpp - Character Frequency Class Implementation
 ///
-/// Copyright (C) 2009 Lissy Lau
+/// Copyright (C) 2009 Lissy Lau <Lissy.Lau@gmail.com>
 ///
 /// MasterMind is free software: you can redistribute it and / or modify
 /// it under the terms of the GNU General Public License as published by
@@ -153,8 +155,12 @@ int main(int argc, char ** argv)
     std::ifstream inFile;
     CharFrequency freqChar;
 
+    // Currently the default locale will be used
+    /// @todo Determine the locale according to index of coincidence
+    std::locale loc;
+
     inFile.open(appOptions.inFile.c_str());
-    freqChar.process(inFile, appOptions.bSkipWS, appOptions.bCaseSensitive);
+    freqChar.process(inFile, loc, appOptions.bSkipWS, appOptions.bCaseSensitive);
     inFile.close();
 
     // Display the result

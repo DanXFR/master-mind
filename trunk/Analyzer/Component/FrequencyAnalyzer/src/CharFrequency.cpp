@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 /// @file CharFrequency.cpp
-/// @brief Character Frequency Analyzer of MasterMind.
+/// @brief Character Frequency Class of MasterMind.
 ///
 /// Related Files:
 /// @li CharFrequency.h - Declaration
 ///
-/// Copyright (C) 2009 Lissy Lau
+/// Copyright (C) 2009 Lissy Lau <Lissy.Lau@gmail.com>
 ///
 /// MasterMind is free software: you can redistribute it and / or modify
 /// it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@
 /// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ctype.h>
-#include <locale>
 #include <algorithm>
 #include "CharFrequency.h"
 
@@ -38,9 +36,17 @@ CharFrequency::~CharFrequency()
     reset();
 }
 
-void CharFrequency::process(std::istream &in_, bool bSkipWS_, bool bCaseSensitive_)
+void CharFrequency::process
+(
+    std::istream &in_,
+    const std::locale &loc_,
+    const bool &bSkipWS_,
+    const bool &bCaseSensitive_
+)
 {
     reset();
+
+    char *oldLoc = std::setlocale(LC_ALL, loc_.name().c_str());
 
     if (bSkipWS_)
     {
@@ -57,20 +63,20 @@ void CharFrequency::process(std::istream &in_, bool bSkipWS_, bool bCaseSensitiv
     {
         in_ >> c;
 
-        if (iscntrl(c))
+        if (std::iscntrl(c))
         {
             m_FreqCtrl++;
         }
-        else if (isprint(c))
+        else if (std::isprint(c))
         {
             m_FreqPrint++;
 
-            if (!bCaseSensitive_ && islower(c))
+            if (!bCaseSensitive_ && std::islower(c))
             {
                 c = std::toupper(c);
             }
 
-            if (isalnum(c))
+            if (std::isalnum(c))
             {
                 m_FreqTotalAlnum++;
 
@@ -87,11 +93,11 @@ void CharFrequency::process(std::istream &in_, bool bSkipWS_, bool bCaseSensitiv
                     m_FreqAlnum[c]++;
                 }
             }
-            else if (ispunct(c))
+            else if (std::ispunct(c))
             {
                 m_FreqPunct++;
             }
-            else if (isspace(c))
+            else if (std::isspace(c))
             {
                 m_FreqSpace++;
             }
@@ -105,9 +111,15 @@ void CharFrequency::process(std::istream &in_, bool bSkipWS_, bool bCaseSensitiv
             m_FreqUnknown++;
         }
     }
+
+    std::setlocale(LC_ALL, oldLoc);
 }
 
-void CharFrequency::getAlnum(std::vector<std::pair<unsigned int, unsigned char> > &vMap_, bool bSorted_)
+void CharFrequency::getAlnum
+(
+    std::vector<std::pair<unsigned int, unsigned char> > &vMap_,
+    const bool &bSorted_
+)
 {
     std::map<unsigned char, unsigned int>::const_iterator iter;
 
