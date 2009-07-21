@@ -23,6 +23,33 @@ const char * argp_program_version
 void print-version (FILE *stream, struct argp_state *state)
 }}}
 
+= The Parser =
+
+{{{
+struct argp_option
+{
+    const char * name;
+    int key;
+    const char * arg;
+    int flags;
+    const char * doc;
+    int group;
+};
+}}}
+
+{{{
+struct argp
+{
+    const struct argp_option * options;
+    argp_parser_t parser;
+    const char * args_doc;
+    const char * doc;
+    const struct argp_child * children;
+    char *(* help_filter)(int key, const char * text, void * input);
+    const char * argp_domain;
+};
+}}}
+
 = Example =
 
 {{{
