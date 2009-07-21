@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 /// @file CharFrequency.h
-/// @brief Character Frequency Analyzer Class of MasterMind.
+/// @brief Character Frequency Class of MasterMind.
 ///
 /// Related Files:
 /// @li CharFrequency.cpp - Implementation
 ///
-/// Copyright (C) 2009 Lissy Lau
+/// Copyright (C) 2009 Lissy Lau <Lissy.Lau@gmail.com>
 ///
 /// MasterMind is free software: you can redistribute it and / or modify
 /// it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <locale>
 
 class CharFrequency
 {
@@ -38,9 +39,19 @@ public:
 
     virtual std::string name() const;
 
-    virtual void process(std::istream &in_, bool bSkipWS_ = false, bool bCaseSensitive_ = false);
+    virtual void process
+    (
+        std::istream &in_,
+        const std::locale &loc_,
+        const bool &bSkipWS_ = false,
+        const bool &bCaseSensitive_ = false
+    );
 
-    void getAlnum(std::vector<std::pair<unsigned int, unsigned char> > &vMap_, bool bSorted_ = false);
+    void getAlnum
+    (
+        std::vector<std::pair<unsigned int, unsigned char> > &vMap_,
+        const bool &bSorted_ = false
+    );
     unsigned int getAlnum() const;
     unsigned int getPunct() const;
     unsigned int getSpace() const;
