@@ -28,11 +28,38 @@ void print-version (FILE *stream, struct argp_state *state)
 {{{
 struct argp_option
 {
+    // Long option, will have short option only if it is zero
     const char * name;
+
+    // Key, and short option if it is a printable ASCII character
     int key;
+
+    // The argument must be provided if it is non-zero,
+    // unless the flag OPTION_ARG_OPTIONAL is set
     const char * arg;
+
+    // OPTION_ARG_OPTIONAL - Argument is optional
+    // OPTION_HIDDEN       - Not displayed in any help messages
+    // OPTION_ALIAS        - An alias for the closest previous non-alias option
+    //                       It will be displayed in the same help entry,
+    //                       and will inherit fields other than name and key
+    //                       from the option being aliased
+    // OPTION_DOC          - Ignored by the actual option parser
+    //                       No '--' prefix is added)
+    //                       Displayed after all options in the same group,
+    //                       after OPTION_DOC entries with a leading '-' 
+    // OPTION_NO_USAGE     - Not included in 'long' usage messages,
+    //                       but still be included in other help messages
     int flags;
+
+    // Document string for the option
+    // Trick: set both name and key to zero to print this as leading message of each group
     const char * doc;
+
+    // Group identity for this option
+    // Options are sorted alphabetically within each group,
+    // and the groups presented in the order 0, 1, 2, ..., n, −m, ..., −2, −1.
+    // Automagic options such as '--help' are put into group −1 
     int group;
 };
 }}}
