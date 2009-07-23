@@ -67,12 +67,31 @@ struct argp_option
 {{{
 struct argp
 {
+    // Vector of argp_option
+    // Note: Need to end the vector with zero or it will lead to segmentation fault
     const struct argp_option * options;
+
+    // Function that defines actions for this parser
+    // Always return ARGP_ERR_UNKNOWN if it is set to NULL
     argp_parser_t parser;
+
+    // Print the 'Usage:' message
     const char * args_doc;
+
+    // Be printed before and after the options in a long help message,
+    // with the two sections separated by a vertical tab ('\v', '\013') character
     const char * doc;
+
+    // Vector of argp_child
+    // Details can be found in the reference
     const struct argp_child * children;
+
+    // Function that filters the output of help messages
+    // Details can be found in the reference
     char *(* help_filter)(int key, const char * text, void * input);
+
+    // Specify the argp domain
+    // Details can be found in the reference
     const char * argp_domain;
 };
 }}}
