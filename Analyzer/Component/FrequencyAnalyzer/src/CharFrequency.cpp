@@ -46,7 +46,7 @@ void CharFrequency::process
 {
     reset();
 
-    char *oldLoc = std::setlocale(LC_ALL, loc_.name().c_str());
+    std::locale oldLoc = std::locale::global(loc_);
 
     if (bSkipWS_)
     {
@@ -112,7 +112,7 @@ void CharFrequency::process
         }
     }
 
-    std::setlocale(LC_ALL, oldLoc);
+    std::locale::global(oldLoc);
 }
 
 void CharFrequency::getAlnum
