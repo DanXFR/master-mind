@@ -3,7 +3,7 @@
 /// @brief Character Frequency Class of MasterMind.
 ///
 /// Related Files:
-/// @li CharFrequency.h - Declaration
+/// @li CharFrequency.hpp - Declaration
 ///
 /// Copyright (C) 2009 Lissy Lau <Lissy.Lau@gmail.com>
 ///
@@ -22,7 +22,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <algorithm>
-#include "CharFrequency.h"
+#include "CharFrequency.hpp"
 
 const std::string CharFrequency::m_Name = "Character Frequency Analyzer";
 

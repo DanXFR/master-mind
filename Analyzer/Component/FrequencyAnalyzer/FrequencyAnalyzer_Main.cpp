@@ -3,7 +3,7 @@
 /// @brief Main Entrance of FrequencyAnalyzer (CLI-based)
 ///
 /// Related Files:
-/// @li CharFrequency.h - Character Frequency Class Declaration
+/// @li CharFrequency.hpp - Character Frequency Class Declaration
 /// @li CharFrequency.cpp - Character Frequency Class Implementation
 ///
 /// Copyright (C) 2009 Lissy Lau <Lissy.Lau@gmail.com>
@@ -27,21 +27,24 @@
 #include <iomanip>
 #include <vector>
 #include <argp.h>
-#include "CharFrequency.h"
+#include "CharFrequency.hpp"
 
 static const std::string g_strAppName = "MasterMind Frequency Analyzer";
 const char * argp_program_bug_address = "<Lissy.Lau@gmail.com>";
 
-// Hard-coded and settable configuration options
+//////////////////////////////////////////////////////////////////////////////
+/// @class AppOptions
+/// @brief Hard-coded and settable configuration options
+//////////////////////////////////////////////////////////////////////////////
 struct AppOptions
 {
-    char        vmajor;
-    char        vminor;
-    std::string date;
-    std::string inFile;
-    bool        bSorted;
-    bool        bCaseSensitive;
-    bool        bSkipWS;
+    char        vmajor;          ///< Major version
+    char        vminor;          ///< Minor version
+    std::string date;            ///< Date and time
+    std::string inFile;          ///< Input file
+    bool        bSorted;         ///< Whether to sort the output in alphabetic order
+    bool        bCaseSensitive;  ///< Whether to process in a case sensitive manner
+    bool        bSkipWS;         ///< Whether to skip whitespaces
 };
 
 static AppOptions appOptions =
@@ -65,6 +68,7 @@ static struct argp_option appArgpOptions[] =
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+/// @fn printVersion
 /// @brief Print the version of the application
 ///
 /// @param[in] stream - FILE stream destination of the output
@@ -86,6 +90,7 @@ static void printVersion
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+/// @fn parseOpt
 /// @brief Parse the command line options
 ///
 /// @param[in] key   - The key referring to the command line argument
@@ -229,3 +234,4 @@ int main(int argc, char ** argv)
 
     return 0;
 }
+
