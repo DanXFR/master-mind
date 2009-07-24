@@ -46,13 +46,13 @@ $(PROGRAM): $(OBJECT_PATH)/FrequencyAnalyzer_Main.o $(OBJECTS) $(LIBRARIES)
 $(OBJECT_PATH)/FrequencyAnalyzer_Main.o: FrequencyAnalyzer_Main.cpp $(OBJECTS) $(LIBRARIES)
 	$(CXX) -c $(CXXFLAGS) -o $(OBJECT_PATH)/FrequencyAnalyzer_Main.o FrequencyAnalyzer_Main.cpp
 
-$(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.cc $(INCLUDE_PATH)/%.h
+$(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.cc $(INCLUDE_PATH)/%.hpp
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-$(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.cpp $(INCLUDE_PATH)/%.h
+$(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.cpp $(INCLUDE_PATH)/%.hpp
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-$(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.cxx $(INCLUDE_PATH)/%.h
+$(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.cxx $(INCLUDE_PATH)/%.hpp
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 $(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.c $(INCLUDE_PATH)/%.h
