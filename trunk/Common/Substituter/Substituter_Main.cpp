@@ -22,7 +22,7 @@
 
 #include <fstream>
 #include <iostream>
-#include <ncurses.h>
+#include <string.h>
 #include <argp.h>
 #include "CharSubstituteConfigure.h"
 #include "CharSubstituter.h"
