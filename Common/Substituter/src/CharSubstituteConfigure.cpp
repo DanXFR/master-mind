@@ -22,6 +22,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ctype.h>
+#include <string.h>
 #include <fstream>
 #include <locale>
 #include "CharSubstituteConfigure.h"
