@@ -4,6 +4,7 @@
 = Next Step =
 
   * Use XML encrypt / decrypt scheme file
+  * Unittest++
   * Use ncurses instead of argp as console UI
   * Restructuring class hierarchies, UML diagrams
   * Directories planning
