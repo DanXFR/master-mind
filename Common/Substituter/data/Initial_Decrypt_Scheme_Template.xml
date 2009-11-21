@@ -2,6 +2,14 @@
 
 <SubstitutionScheme>
   <SubstitutionAlgorithm Name="Simple Substitution" CaseSensitive="0" KeepUnknownChar="1" />
+  <SubstitutionTuple Plain="-" Cipher="A" />
+  <SubstitutionTuple Plain="-" Cipher="B" />
+  <SubstitutionTuple Plain="-" Cipher="C" />
+  <SubstitutionTuple Plain="-" Cipher="D" />
+  <SubstitutionTuple Plain="-" Cipher="E" />
+  <SubstitutionTuple Plain="-" Cipher="F" />
+  <SubstitutionTuple Plain="-" Cipher="G" />
+  <SubstitutionTuple Plain="-" Cipher="H" />
   <SubstitutionTuple Plain="-" Cipher="I" />
   <SubstitutionTuple Plain="-" Cipher="J" />
   <SubstitutionTuple Plain="-" Cipher="K" />
@@ -20,13 +28,5 @@
   <SubstitutionTuple Plain="-" Cipher="X" />
   <SubstitutionTuple Plain="-" Cipher="Y" />
   <SubstitutionTuple Plain="-" Cipher="Z" />
-  <SubstitutionTuple Plain="-" Cipher="A" />
-  <SubstitutionTuple Plain="-" Cipher="B" />
-  <SubstitutionTuple Plain="-" Cipher="C" />
-  <SubstitutionTuple Plain="-" Cipher="D" />
-  <SubstitutionTuple Plain="-" Cipher="E" />
-  <SubstitutionTuple Plain="-" Cipher="F" />
-  <SubstitutionTuple Plain="-" Cipher="G" />
-  <SubstitutionTuple Plain="-" Cipher="H" />
 </SubstitutionScheme>
 

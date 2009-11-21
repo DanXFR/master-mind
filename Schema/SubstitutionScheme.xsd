@@ -17,6 +17,9 @@
       <xsd:simpleType> 
         <xsd:restriction base="xsd:string">
           <xsd:enumeration value="Simple Substitution" />
+          <xsd:enumeration value="Homophonic Substitution" />
+          <xsd:enumeration value="Polyalphabetic Substitution" />
+          <xsd:enumeration value="Polygraphic Substitution" />
         </xsd:restriction>
       </xsd:simpleType>
     </xsd:attribute>
