@@ -205,6 +205,7 @@ bool CharSubstituteConfigure::readScheme(xmlDocPtr schemeDoc_, bool bEncrypt_)
                 {
                     unknownChar = readChar[0];
                 }
+                else
                 {
                     if (!bKeepOriginal)
                     {
