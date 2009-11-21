@@ -36,15 +36,22 @@ m_ConfigData(configData_)
 
 void CharSubstituter::process(std::istream &in_, std::ostream &out_)
 {
-    in_.unsetf(std::ios::skipws);
-    out_.unsetf(std::ios::skipws);
-
-    unsigned char tmpChar;
-
-    while (EOF != in_.peek())
+    if (m_ConfigData.isValid())
     {
-        in_ >> tmpChar;
-        out_ << m_ConfigData.getChar(tmpChar);
+        in_.unsetf(std::ios::skipws);
+        out_.unsetf(std::ios::skipws);
+
+        unsigned char tmpChar;
+
+        while (EOF != in_.peek())
+        {
+            in_ >> tmpChar;
+            out_ << m_ConfigData.getChar(tmpChar);
+        }
+    }
+    else
+    {
+        std::cout << "[" << __PRETTY_FUNCTION__ << "] Invalid substitution configuration!" << std::endl;
     }
 }
 

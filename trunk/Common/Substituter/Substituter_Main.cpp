@@ -39,9 +39,7 @@ struct AppOptions
     std::string   inFile;
     std::string   outFile;
     std::string   scheme;
-    bool          bCaseSensitive;
-    bool          bKeepOriginal;
-    unsigned char unknownSymbol;
+    bool          bEncrypt;
 };
 
 static AppOptions appOptions =
@@ -52,9 +50,7 @@ static AppOptions appOptions =
     "",                   // inFile         (command-line settable)
     "",                   // outFile        (command-line settable)
     "",                   // scheme         (command-line settable)
-    false,                // bCaseSensitive (command-line settable)
-    false,                // bKeepOriginal  (command-line settable)
-    ' '                   // unknownSymbol  (command-line settable)
+    false,                // bEncrypt       (command-line settable)
 };
 
 static struct argp_option appArgpOptions[] =
@@ -62,9 +58,7 @@ static struct argp_option appArgpOptions[] =
     {"inFile",        'i', "INPUT_FILE",  0, "Input file",                                      0},
     {"outFile",       'o', "OUTPUT_FILE", 0, "Output file, output to STD_OUT if not specified", 0},
     {"scheme",        's', "SCHEME",      0, "Substitution scheme",                             0},
-    {"caseSensitive", 'c', NULL,          0, "Case sensitive",                                  0},
-    {"keepOriginal",  'k', NULL,          0, "Keep the original ones for unknown characters",   0},
-    {"unknownSymbol", 'u', "CHAR",        0, "Symbol for the unknown characters",               0},
+    {"encrypt",       'e', NULL,          0, "Encrypt or decrypt flag",                         0},
     {0}
 };
 
@@ -126,24 +120,8 @@ static error_t parseOpt
             arguments->scheme = arg;
             break;
 
-        case 'c':    // --caseSensitive
-            arguments->bCaseSensitive = true;
-            break;
-
-        case 'k':    // --keepOriginal
-            arguments->bKeepOriginal = true;
-            break;
-
-        case 'u':    // --unknownSymbol
-            if (1 == strlen(arg))
-            {
-                arguments->unknownSymbol = (unsigned char)arg[0];
-            }
-            else
-            {
-                argp_error(state, "Invalid symbol length!");
-            }
-            break;
+        case 'e':    // --encrypt
+            arguments->bEncrypt = true;
 
         case ARGP_KEY_ARG:
             argp_error(state, "Too many arguments!");
@@ -163,8 +141,7 @@ static struct argp argp = {appArgpOptions, parseOpt, "", "", 0, 0, 0};
 
 void processSubstitution(const AppOptions &appOptions_)
 {
-    CharSubstituteConfigure charSubstituteConfig(appOptions_.scheme, appOptions_.bCaseSensitive,
-        appOptions_.bKeepOriginal, appOptions_.unknownSymbol);
+    CharSubstituteConfigure charSubstituteConfig(appOptions_.scheme, appOptions_.bEncrypt);
     CharSubstituter charSubstituter(charSubstituteConfig);
 
     std::ifstream inFile;

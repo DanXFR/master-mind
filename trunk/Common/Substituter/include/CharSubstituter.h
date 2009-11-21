@@ -45,7 +45,7 @@ private:
 
     static const std::string m_Name;  // Name of the component
 
-    CharSubstituteConfigure m_ConfigData;
+    const CharSubstituteConfigure & m_ConfigData;
 };
 
 inline std::string CharSubstituter::name() const

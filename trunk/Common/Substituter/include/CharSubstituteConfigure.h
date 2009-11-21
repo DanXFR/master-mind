@@ -26,6 +26,7 @@
 
 #include <iostream>
 #include <string>
+#include <libxml/xmlreader.h>
 
 class CharSubstituteConfigure
 {
@@ -34,13 +35,13 @@ public:
     CharSubstituteConfigure
     (
         std::string scheme_,
-        bool bCaseSensitive_,
-        bool bKeepOriginal_,
-        unsigned char unknownSymbol_
+        bool bEncrypt_
     );
     virtual ~CharSubstituteConfigure();
 
     virtual std::string name() const;
+
+    bool isValid() const;
 
     unsigned char getChar(unsigned char inputChar_) const;
 
@@ -51,14 +52,25 @@ private:
 
     CharSubstituteConfigure();
 
+    bool checkScheme(xmlDocPtr schemeDoc_);
+    bool readScheme(xmlDocPtr scheme_, bool bEncrypt_);
+
     static const std::string m_Name;    // Name of the component
 
-    unsigned char m_Data[256];
+    bool m_Valid;
+
+    static const int VOCABULARY_SIZE = 0xFF;
+    unsigned char m_Data[VOCABULARY_SIZE];
 };
 
 inline std::string CharSubstituteConfigure::name() const
 {
     return m_Name;
+}
+
+inline bool CharSubstituteConfigure::isValid() const
+{
+    return m_Valid;
 }
 
 inline unsigned char CharSubstituteConfigure::getChar(unsigned char inputChar_) const
