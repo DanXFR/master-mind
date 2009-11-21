@@ -30,7 +30,8 @@ LD_LIBS = \
 DEFINES =
 
 INCLUDES = \
-    -I$(INCLUDE_PATH)
+    -I$(INCLUDE_PATH) \
+	-I /usr/include/libxml2
 
 LDPATHS = \
     -L$(LIBRARY_PATH)
@@ -61,7 +62,7 @@ $(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.c $(INCLUDE_PATH)/%.h
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(LIBRARY_PATH)/lib%.so: $(OBJECT_PATH)/%.o
-	$(CC) $(CFLAGS) -shared -o $@ $< -lstdc++
+	$(CC) $(CFLAGS) -shared -o $@ $< -lstdc++ -lxml2
 
 # Use - before the command to ignore error.
 
