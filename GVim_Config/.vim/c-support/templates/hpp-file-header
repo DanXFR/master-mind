@@ -1,21 +1,25 @@
-//////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// @file |FILENAME|
 /// @brief |CURSOR|
 ///
 /// Related Files:
+/// @li
 ///
-/// Maintained by:
-/// 
-/// Copyright (c) |YEAR| |COMPANY|. All Rights Reserved.
+/// Copyright (C) |YEAR| |AUTHOR|
 ///
-/// CONFIDENTIALITY AND LIMITED USE
+/// |PROJECT| is free software: you can redistribute it and / or modify
+/// it under the terms of the GNU General Public License as published by
+/// the Free Software Foundation, either version 3 of the License, or
+/// (at your option) any later version.
 ///
-/// This software, including any software of third parties embodied herein,
-/// contains information and concepts which are confidential to Nortel
-/// Networks and such third parties. This software is licensed for use
-/// solely in accordance with the terms and conditions of the applicable
-/// license agreement with Nortel Networks or its authorized distributor.
-//////////////////////////////////////////////////////////////////////////////
+/// This program is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+/// GNU General Public License for more details.
+///
+/// You should have received a copy of the GNU General Public License
+/// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+///////////////////////////////////////////////////////////////////////////////
 
 #ifndef  __|BASENAMElegal|_HPP__
 #define  __|BASENAMElegal|_HPP__

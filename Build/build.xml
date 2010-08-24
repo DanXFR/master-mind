@@ -1,0 +1,20 @@
+<!-- MasterMind Load Build Schema -->
+
+<Build name="MasterMind">
+    <Category name="Analyzer" path="Analyzer">
+	<Component name="Frequency Analyzer">
+            <Module name="Character Frequency Analyzer" />
+        </Component>
+    </Category>
+    <Category name="Encrypter" path="Encrypter">
+	<Component name="Substitution Cipher">
+            <Module name="Character Substituter" />
+        </Component>
+    </Category>
+    <Category name="Decrypter" path="Decrypter">
+	<Component name="Substitution Cipher">
+            <Module name="Character Substituter" />
+        </Component>
+    </Category>
+</Build>
+
