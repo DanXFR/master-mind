@@ -4,6 +4,8 @@
     <Category name="Analyzer" path="Analyzer">
 	<Component name="Frequency Analyzer">
             <Module name="Character Frequency Analyzer" />
+	</Component>
+        <Component name="Index Of Coincidence">
         </Component>
     </Category>
     <Category name="Encrypter" path="Encrypter">
