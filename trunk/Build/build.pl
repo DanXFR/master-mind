@@ -33,27 +33,44 @@ package ElemInfo;
 
 sub new
 {
-    my ($class) = @_;
+    my $class = shift;
 
-    my $self =
-    {
-        _name       => undef,
-        _idx        => undef,
-        _components => undef
-    };
+    my $self = [0, undef, 0, 0, 1, {}, {}, {}];
 
     bless $self, $class;
-    return $self;
 }
 
 package main;
 
+sub COUNT()  {0;}
+sub MINLEV() {1;}
+sub SEEN()   {2;}
+sub CHARS()  {3;}
+sub EMPTY()  {4;}
+sub PTAB()   {5;}
+sub KTAB()   {6;}
+sub ATAB()   {7;}
+
 use strict;
+use English;
 use XML::Parser;
 use Switch;
 
+use constant
+{
+    CATEGORY  => 0,
+    COMPONENT => 1,
+    MODULE    => 2,
+};
+
+my %elements;
+my $seen = 0;
+my $root;
+
 my $TOPDIR = "..";
 my $file = "$TOPDIR/Build/build.xml";
+
+my $subform = '      @<<<<<<<<<<<<<<<      @>>>>';
 
 die "Can't find file \"$file\"" unless -f $file;
 
@@ -71,13 +88,31 @@ $parser->setHandlers(Init    => \&init_handler,        # StartDocument
                      Final   => \&final_handler,       # EndDocument
                      Proc    => \&proc_handler,        # Proc
                      Comment => \&comment_handler,     # Comment
-		     Default => \&default_handler);    # Default
+                     Default => \&default_handler);    # Default
 
 $parser->parsefile($file);
 
 my $line     = 0;
 my $col      = 0;
 my $elem_idx = 0;
+
+set_minlev($root, 0);
+
+my $elem;
+
+foreach $elem (sort bystruct keys %elements)
+{
+    my $ref = $elements{$elem};
+    print "\n================\n$elem: ", $ref->[COUNT], "\n";
+    print "Had ", $ref->[CHARS], " bytes of character data\n"
+        if $ref->[CHARS];
+    print "Always empty\n"
+        if $ref->[EMPTY];
+
+    showtab('Parents', $ref->[PTAB], 0);
+    showtab('Children', $ref->[KTAB], 1);
+    showtab('Attributes', $ref->[ATAB], 0);
+}
 
 print_summary();
 
@@ -98,7 +133,45 @@ sub start_handler
 
     $line     = $e->current_line;
     $col      = $e->current_column;
-    $elem_idx = $e->element_index;
+
+    my $eleminfo = $elements{$tag};
+
+    if (not defined($eleminfo))
+    {
+        $elements{$tag} = $eleminfo = new ElemInfo;
+        $eleminfo->[SEEN] = $seen++;
+    }
+
+    $eleminfo->[COUNT]++;
+
+    my $partab = $eleminfo->[PTAB];
+
+    my $parent = $e->current_element;
+    if (defined($parent))
+    {
+        $partab->{$parent}++;
+        my $pinfo = $elements{$parent};
+
+        # Increment our slot in parent's child table
+        $pinfo->[KTAB]->{$tag}++;
+        $pinfo->[EMPTY] = 0;
+    }
+    else
+    {
+        $root = $tag;
+    }
+
+    # Deal with attributes
+
+    my $atab = $eleminfo->[ATAB];
+
+    #while (@_)
+    #{
+    #    my $att = shift;
+        
+    #    $atab->{$att}++;
+    #    shift;  # Throw away value
+    #}
 
     switch ($tag)
     {
@@ -108,18 +181,15 @@ sub start_handler
         }
         case "Category"
         {
-            print "# Building Category $attr{name} ...\n";
-            $cnt_category++;
+            print "# Building Category $attr{name} at $TOPDIR/$attr{path} ...\n";
         }
         case "Component"
         {
             print "## Building Component $attr{name} ...\n";
-            $cnt_component++;
         }
         case "Module"
         {
             print "### Building Module $attr{name} ...\n";
-            $cnt_module++;
         }
         else
         {
@@ -168,8 +238,68 @@ sub default_handler
     # Do nothing
 }
 
+sub set_minlev
+{
+    my ($el, $lev) = @_;
+
+    my $eleminfo = $elements{$el};
+    if (! defined($eleminfo->[MINLEV]) or $eleminfo->[MINLEV] > $lev)
+    {
+        my $newlev = $lev + 1;
+
+        $eleminfo->[MINLEV] = $lev;
+        foreach (keys %{$eleminfo->[KTAB]})
+        {
+            set_minlev($_, $newlev);
+        }
+    }
+}
+
+sub bystruct
+{
+    my $refa = $elements{$a};
+    my $refb = $elements{$b};
+
+    $refa->[MINLEV] <=> $refb->[MINLEV] or $refa->[SEEN] <=> $refb->[SEEN];
+}
+
+sub showtab
+{
+    my ($title, $table, $dosum) = @_;
+
+    my @list = sort keys %{$table};
+
+    if (@list)
+    {
+        print "\n   $title:\n";
+
+        my $item;
+        my $sum = 0;
+        foreach $item (@list)
+        {
+            my $cnt = $table->{$item};
+            $sum += $cnt;
+            formline($subform, $item, $cnt);
+            print $ACCUMULATOR, "\n";
+            $ACCUMULATOR = '';
+        }
+
+        if ($dosum and @list > 1)
+        {
+            print  "                            =====\n";
+            formline($subform, '', $sum);
+            print $ACCUMULATOR, "\n";
+            $ACCUMULATOR = '';
+        }
+    }
+}
+
 sub print_summary
 {
+    $cnt_category  = $elements{Category}->[COUNT];
+    $cnt_component = $elements{Component}->[COUNT];
+    $cnt_module    = $elements{Module}->[COUNT];
+
     print "\n===== Build Summary =====\n\n";
     print "Categories:  $cnt_category\n";
     print "Components:  $cnt_component\n";
