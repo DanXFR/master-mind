@@ -40,16 +40,16 @@ sub new
     bless $self, $class;
 }
 
-package main;
+package BuildElement;
 
-sub COUNT()  {0;}
-sub MINLEV() {1;}
-sub SEEN()   {2;}
-sub CHARS()  {3;}
-sub EMPTY()  {4;}
-sub PTAB()   {5;}
-sub KTAB()   {6;}
-sub ATAB()   {7;}
+sub new
+{
+    my $class = shift;
+    my $self = [0, "", 0, {}];
+    bless $self, $class;
+}
+
+package main;
 
 use strict;
 use English;
@@ -58,17 +58,44 @@ use Switch;
 
 use constant
 {
-    CATEGORY  => 0,
-    COMPONENT => 1,
-    MODULE    => 2,
+    COUNT  => 0,
+    MINLEV => 1,
+    SEEN   => 2,
+    CHARS  => 3,
+    EMPTY  => 4,
+    PTAB   => 5,
+    KTAB   => 6,
+    ATAB   => 7,
+};
+
+use constant
+{
+    BUILD     => 0,
+    CATEGORY  => 1,
+    COMPONENT => 2,
+    MODULE    => 3,
+};
+
+use constant
+{
+    TYPE  => 0,
+    PATH  => 1,
+    BUILD => 2,
+    CHILD => 3,
 };
 
 my %elements;
 my $seen = 0;
 my $root;
 
+my %buildelements;
+my %buildcategories;
+my %buildcomponents;
+my %buildmodules;
+my $buildroot;
+
 my $TOPDIR = "..";
-my $file = "$TOPDIR/Build/build.xml";
+my $file = "build.xml";
 
 my $subform = '      @<<<<<<<<<<<<<<<      @>>>>';
 
@@ -159,6 +186,9 @@ sub start_handler
     else
     {
         $root = $tag;
+        # Me
+        $buildroot = new BuildElement;
+        $buildroot->[TYPE] = BUILD;
     }
 
     # Deal with attributes
@@ -173,6 +203,17 @@ sub start_handler
     #    shift;  # Throw away value
     #}
 
+    my $buildelem = $buildelements{$attr{name}};
+    if (not defined $buildelem)
+    {
+        $buildelements{$attr{name}} = $buildelem = new BuildElement;
+        $buildelem->[PATH] = $attr{path};
+    }
+    else
+    {
+        print "Duplicated build element ($attr{name}) is found.\n";
+    }
+
     switch ($tag)
     {
         case "Build"
@@ -181,6 +222,17 @@ sub start_handler
         }
         case "Category"
         {
+            my $buildcategory = $buildcategories{$attr{name}};
+            if (not defined $buildcategory)
+            {
+                $buildcategories{$attr{name}} = $buildcategory = new BuildElement;
+                $buildcategory->[TYPE] = CATEGORY;
+                $buildcategory->[PATH] = $attr{path};
+            }
+            else
+            {
+                print "Duplicated build category ($attr{name}) is found.\n";
+            }
             print "# Building Category $attr{name} at $TOPDIR/$attr{path} ...\n";
         }
         case "Component"
