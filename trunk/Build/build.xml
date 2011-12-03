@@ -2,9 +2,9 @@
 
 <Build name="MasterMind">
     <Category name="Analyzer" path="Analyzer">
-	<Component name="FrequencyAnalyzer">
-            <Module name="CharacterFrequencyAnalyzer" />
-	</Component>
+        <Component name="FrequencyAnalyzer">
+	    <App name="FrequencyAnalyzer">
+        </Component>
         <Component name="IndexOfCoincidence">
         </Component>
     </Category>
