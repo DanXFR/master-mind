@@ -8,7 +8,7 @@
 # @li build.xml - Load Build Schema
 # @li build.template - Makefile Template
 #
-# Copyright (C) 2009 Lissy Lau <Lissy.Lau@gmail.com>
+# Copyright (C) 2011 Lissy Lau <Lissy.Lau@gmail.com>
 #
 # MasterMind is free software: you can redistribute it and / or modify
 # it under the terms of the GNU General Public License as published by
@@ -53,7 +53,6 @@ package main;
 
 use strict;
 use English;
-use XML::Parser;
 use Switch;
 
 use constant

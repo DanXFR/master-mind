@@ -14,6 +14,8 @@ INCLUDE_PATH      = include
 SOURCE_PATH       = src
 OBJECT_PATH       = obj
 LIBRARY_PATH      = lib
+INSTALL_BIN_PATH  = /usr/local/master-mind/bin
+INSTALL_LIB_PATH  = /usr/local/master-mind/lib
 
 PROGRAM = FrequencyAnalyzer
 
@@ -62,6 +64,13 @@ $(LIBRARY_PATH)/lib%.so: $(OBJECT_PATH)/%.o
 	$(CC) $(CFLAGS) -shared -o $@ $< -lstdc++
 
 # Use - before the command to ignore error.
+
+install:
+	-mkdir -p $(INSTALL_BIN_PATH)
+	-mkdir -p $(INSTALL_LIB_PATH)
+	-cp $(PROGRAM) $(INSTALL_BIN_PATH)
+	-cp $(LIBRARIES) $(INSTALL_LIB_PATH)
+	-ldconfig
 
 clean:
 	-rm -f $(OBJECT_PATH)/*
