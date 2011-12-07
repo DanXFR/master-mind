@@ -152,6 +152,12 @@ int main(int argc, char ** argv)
     // Or set the argp_program_version
     argp_program_version_hook = printVersion;
 
+    if (1 == argc)
+    {
+        // Print help if no argument is provided
+        std::cout << std::endl;
+    }
+
     if (argp_parse(&argp, argc, argv, 0, 0, &appOptions))
     {
         return -1;
