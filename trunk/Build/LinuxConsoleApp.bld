@@ -1,0 +1,63 @@
+#==============================================================================
+# Build Parameters File for Linux Console 
+#==============================================================================
+
+# Determine Host Type and Location for Specific Environments
+setenv: OSNAME:              `uname -s`
+
+# Host Dependant Defines
+if: $OSNAME ne Linux
+echo: *** Invalid Host - Please build under Linux! ***
+exit: 1
+endif:
+
+setenv: HOST_TYPE:           Linux
+
+# DTHELPSEARCHPATH creates linking errors in the build
+unsetenv: DTHELPSEARCHPATH:
+unsetenv: XMICONSEARCHPATH:
+unsetenv: DTAPPSEARCHPATH:
+unsetenv: MANPATH:
+
+# The following variables are used in macros.default to expand paths. 
+# They are defined in the makefile whichs "includes macros.default"
+unsetenv: MODULE:
+unsetenv: DOMAIN:
+unsetenv: BUILD:
+
+# Target Specific
+setenv: OS:                  Linux
+setenv: CPU:                 i386
+setenv: UI:                  Console
+setenv: TOOL:                gnu
+setenv: BUILD_NAME:          LinuxConsoleApp
+setenv: TARGET:              LinuxConsoleApp
+
+setenv: BUILD_ROOT:          /cc/bts
+setenv: MAP_ROOT:            ${BUILD_ROOT}/map/card
+setenv: UTIL_ROOT:           ${MAP_ROOT}/${CARD}/util
+setenv: RULES_ROOT:          ${MAP_ROOT}/${CARD}/rules
+setenv: BPF_COMMON:          ${BUILD_ROOT}/build/home/bpf
+
+#include : ${BPF_COMMON}/path.bpf
+
+# Clearcase Environment
+setenv: BUILD_MAKE_CMD:       make
+setenv: CCASE_BLD_UMASK:      007
+
+# Change to Vxworks6.9
+setenv: WIND_HOME:            /cc_vobs/bts/workbench33GA
+setenv: WIND_BASE:            ${WIND_HOME}/vxworks-6.9
+setenv: WIND_FOUNDATION_PATH: ${WIND_HOME}/workbench-3.3/foundation
+setenv: TCL_LIBRARY:          ${WIND_FOUNDATION_PATH}/${HOST_TYPE}/lib/tcl8.5
+setenv: WIND_COMPONENTS:      ${WIND_HOME}/components
+setenv: WRSD_LICENSE_FILE:    /opt/tools/licenses/wrs_ericsson
+setenv: WIND_HOST_TYPE:       ${HOST_TYPE}
+
+path: utilities: ${UTIL_ROOT}:/cc_vobs/bts/workbench33GA/diab/5.9.0.0/SUNS/bin/
+path: bldutil:   ${UTIL_ROOT}/bin/${HOST_TYPE}
+path: vxWorks: ${WIND_BASE}/host/${WIND_HOST_TYPE}/bin
+
+setenv: LD_LIBRARY_PATH:      /cc/bts/workbench30/scopetools-6.0/host/bin/${HOST_TYPE}:${WIND_FOUNDATION_PATH}/${HOST_TYPE}/lib
+path:   binutil:              /usr/ccs/bin:/cc/bts/workbench30/workbench-3.0/${HOST_TYPE}/bin:${WIND_FOUNDATION_PATH}/${HOST_TYPE}/bin
+
