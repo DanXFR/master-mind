@@ -23,7 +23,7 @@
 #     modules.  Domain test loads can contain domains and/or modules. The
 #     location of directories are as follows:
 #
-#       Executables      $MASTERMIND_ROOT/Bld
+#       Executables      $MASTERMIND_ROOT/bld
 #       Domains          $MASTERMIND_ROOT/<card>/domain/<domain>
 #       Modules          $MASTERMIND_ROOT/<card>/domain/<domain>/module/<module>
 #       ITE Modules      $ITE_ROOT/module/<module>
@@ -88,7 +88,6 @@ sub getBldStr;                  # get bld file string
 
 sub findCurrentDomain;          # findCurrentDomain()
 
-sub retrieveLoadMakefiles;      # retrieveLoadMakefiles($load, $domain, $target)
 sub retrieveExecMakefiles;      # retrieveExecMakefiles($executable, $target)
 sub retrieveDomainMakefiles;    # retrieveDomainMakefiles($domain, $target)
 sub retrieveModuleMakefiles;    # retrieveModuleMakefiles($module, $domain, $target)
@@ -131,7 +130,6 @@ my $DIST_LABEL      = "";
 my $mFlagF = "";           #A flag enabled when the target is "codegen"
 
 # Logging Variables
-my $Today;
 my $User;
 my $Homedir;
 my $DebugTopDir;
@@ -140,8 +138,6 @@ my $KeepDebugDirs;
 my $enableLogs;
 
 my $Build="";
-
-$ENV{LM_PROJECT} = "WIRELESS_TORNADO";
 
 # This enables command buffering (flushes output of print 
 # commands from within "system" call)
@@ -153,8 +149,6 @@ my @envList =
 (
     "MASTERMIND_ROOT",
     "BUILD_ID",
-    "CCASE_.*",
-    "CLEARCASE_.*",
     "USER",
     "PWD",
     "BITMAP_PATH",
@@ -166,15 +160,12 @@ my @envList =
     "SHELL",
     "GO_.*",
     "RSU_LICENSE_MAP",
-    "LM_LICENSE_FILE",
     "CSCOPE_*",
     "CSCOPE_DOMAIN",
     "MAKEX_STATS_FILE",
     "DIST_LABEL", 
-    "MAKEME_ENABLE_PID_DIR",
     "HOME",
-    "LAUNCH_NASA",
-    "LM_PROJECT"
+    "PATH"
 );
 
 
@@ -299,7 +290,7 @@ use Sys::Hostname qw();
 #   Once Perl library is installed, replace with
 #   use File::Spec 0.82;
 #   require "find.pl";
-require "$UTIL_ROOT/lib/Unix.pm";
+#require "$UTIL_ROOT/lib/Unix.pm";
 
 # Perl pragma to restrict unsafe constructs 
 use strict;
@@ -379,10 +370,10 @@ sub LogExecution($) {
     my $cmd = shift;
 
     # keep a copy the environment after makeme modifies it
-    system("printenv >> $DebugDir/postbpf.env 2>&1");
+    system("printenv >> $DebugDir/postbld.env 2>&1");
 
     # diff the two environment dumps
-    system("diff >> $DebugDir/env.diff $DebugDir/prebpf.env $DebugDir/postbpf.env 2>&1");
+    system("diff >> $DebugDir/env.diff $DebugDir/prebld.env $DebugDir/postbld.env 2>&1");
 
     # append Make information to the info file
     my $fname = "$DebugDir/build.info";
@@ -417,56 +408,52 @@ sub LogExecution($) {
 # setup history variables
 sub setupHistoryVars
 {
-    # handy globals
-    $Today = `date +%Y%m%d_%H%M%S`;
-    print $Today;
+    # Handy Globals
+    my $Today = `date +%Y%m%d_%H%M%S`;
     chomp($Today);
     
     # DebugTopDir holds the debug directories (one per build)
-    $DebugTopDir="$Homedir/cdma_build";
-    if(! -d $DebugTopDir) {
+    $DebugTopDir="$Homedir/mastermind_build";
+    if (! -d $DebugTopDir)
+    {
 	mkdir($DebugTopDir, 0755) || die "mkdir $DebugTopDir: $!\n";
     }
     
     $DebugDir;
     # DebugDir will be used to keep debug information for an individual build
-    if (defined($ENV{MAKEME_ENABLE_PID_DIR}))
-    {
-	$DebugDir = "$DebugTopDir/build_$Today" . "_$$";
-    }
-    else
-    {
-	$DebugDir = "$DebugTopDir/build_$Today";
-    }
+    $DebugDir = "$DebugTopDir/build_$Today";
     mkdir($DebugDir, 0755) || die "mkdir $DebugDir: $!\n";
     
-# KeepDebugDirs specifies how many debug directories to keep (eg. the last 6)
-# Default is 6 unless the KEEP_DEBUG_DIRS environment variable is defined
+    # KeepDebugDirs specifies how many debug directories to keep (eg. the last 6)
+    # Default is 6 unless the KEEP_DEBUG_DIRS environment variable is defined
     $KeepDebugDirs = defined($ENV{KEEP_DEBUG_DIRS}) ? $ENV{KEEP_DEBUG_DIRS} : 6;
     
-# ignore sigpipe signals
+    # Ignore sigpipe signals
     $SIG{"PIPE"} = 'IGNORE';
 }
 
+
 #===========================================================================
 # from makeme with a little change.
+
 sub UpdateExecutionHistory
 {
-  my $build = shift;
+    my $build = shift;
 
-# Updates the execution log in the users home directory
-  my $DisplayMessage;
+    # Updates the execution log in the users home directory
+    my $DisplayMessage;
 
 
-  # PWD is a shell variable
-  my $currentPath = $ENV{PWD} ? $ENV{PWD} : `pwd`;
+    # PWD is a shell variable
+    my $currentPath = $ENV{PWD} ? $ENV{PWD} : `pwd`;
 
-  # rebuild the command line as the user might have typed it
-  # put single quotes around the arguments that had spaces
-  my $cmdLine = $prog;
-  for (@ARGV) {
-      $cmdLine .= (/\s/) ? " '$_'" : " $_";
-  }
+    # Rebuild the command line as the user might have typed it
+    # put single quotes around the arguments that had spaces
+    my $cmdLine = $prog;
+    for (@ARGV)
+    {
+        $cmdLine .= (/\s/) ? " '$_'" : " $_";
+    }
 
   # delete any old debug directories
 
@@ -478,7 +465,6 @@ sub UpdateExecutionHistory
   for my $i ($KeepDebugDirs .. $#dirs) {
       system("rm -rf '$DebugTopDir/$dirs[$i]'");
   }
-
 
   # fill up the debug directory with informative files
 
@@ -496,7 +482,7 @@ sub UpdateExecutionHistory
   print FILE "\n";
   close FILE;
 
-  # copy the bpf file
+  # copy the bld file
   system("cp $build $DebugDir/build.bld");
   
   # keep a copy the environment before makeme modifies it
@@ -894,8 +880,6 @@ sub makeTopDown
     my $module      = shift;
     my $files       = shift;
 
-    $ENV{CSCOPE_DOMAIN} = $category;
-
     if ($nArg == 0)
     {
 	note "build target $target_make\n";
@@ -908,22 +892,28 @@ sub makeTopDown
 	my $nOpt = keys(%opt);
 	note "nOpt:$nOpt\n";
     }
-    else {
-	if ($nArg == 1) {
+    else
+    {
+	if ($nArg == 1)
+        {
 	    note "Build category $category\n";
 	    my @categories = split(/ /, $category);
-	    foreach my $cat (@categories){
+	    foreach my $cat (@categories)
+            {
 		push(@makefiles, retrieveDomainMakefiles($cat, $target_make));	
 	    }
 	}
-	elsif ($nArg == 2) {
+	elsif ($nArg == 2)
+        {
 	    note "build module $module\n";
 	    my @modules = split(/ /, $module);
-	    foreach my $mod (@modules){
+	    foreach my $mod (@modules)
+            {
 		push(@makefiles, retrieveModuleMakefiles($mod, $category, $target_make));	
 	    }
 	}
-	elsif ($nArg == 3) {
+	elsif ($nArg == 3)
+        {
 	    makeFiles($category, $module, $target_make, $files);
 	}
 	
@@ -1124,10 +1114,11 @@ sub note
 sub retrieveExecMakefiles
 {
     my $target = shift;
+
     note "retrieveExecMakefiles() finding makefiles for $target.";
 
     my $executableHome = getExecutableHomePath();
-    my $buildPath = "$executableHome/Bld";
+    my $buildPath      = "$executableHome/bld";
 
     return findMakefiles($buildPath, $target);
 }
@@ -1144,7 +1135,7 @@ sub retrieveDomainMakefiles {
     my $target = shift;
     note "retrieveDomainMakefiles() finding makefiles for $domain.";
 
-    my $buildPath = &getDomainHomePath($domain)."/Bld";
+    my $buildPath = &getDomainHomePath($domain)."/bld";
 
     return findMakefiles($buildPath, $target);
 }
@@ -1161,7 +1152,7 @@ sub retrieveModuleMakefiles {
     my $domain = shift;
     my $target = shift;
 
-    my $buildPath = &getModuleHomePath($domain,$module)."/Bld";
+    my $buildPath = &getModuleHomePath($domain,$module)."/bld";
 
     return findMakefiles($buildPath, $target);
 }
@@ -1182,11 +1173,11 @@ sub findMakefiles
     {
        @filelist = findFiles($buildPath, $makePattern, $excludePattern);
     }
-    elsif (($buildPath =~ /module\/(.*)\/Bld/) || ($buildPath =~ /domain\/(.*)\/Bld/))
+    elsif (($buildPath =~ /module\/(.*)\/bld/) || ($buildPath =~ /domain\/(.*)\/bld/))
     {
        @filelist = $buildPath . "/" . $1 . $target . ".mk";
     }
-    elsif($buildPath =~ /Target\/.*\/Bld/)
+    elsif($buildPath =~ /Target\/.*\/bld/)
     {
        @filelist = $buildPath . "/" . $target . ".mk";
     }
@@ -1332,7 +1323,8 @@ sub findFiles {
 # DESCRIPTION:  Returns files in path that matches "matchPattern", and
 #               excludes files that match "excludePattern".
 #
-sub compileMakefiles {
+sub compileMakefiles
+{
     my $makefilesRef = shift;
     my $makeargsRef = shift;
     my $maketargetsRef = shift;
@@ -1361,7 +1353,7 @@ sub compileMakefiles {
 	# up in this directory and also the build does not pickup 
 	# wrong source file from current directory.
 	chdir($makepath);
-	print "change directory to '$makepath'\n";
+	print "Change directory to '$makepath'\n";
         my $cmd = "$BUILD_MAKE_CMD -f $makefile $argsStr $targetsStr";
         print "\n***START COMPILE OF $makefile\n";
         print "   $cmd\n";
