@@ -1,4 +1,0 @@
-
-COMPONENT := Analyzer \
-             Encypter-Decrypter
-

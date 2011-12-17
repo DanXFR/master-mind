@@ -1173,7 +1173,7 @@ sub findMakefiles
     {
        @filelist = findFiles($buildPath, $makePattern, $excludePattern);
     }
-    elsif (($buildPath =~ /module\/(.*)\/bld/) || ($buildPath =~ /domain\/(.*)\/bld/))
+    elsif (($buildPath =~ /module\/(.*)\/bld/) || ($buildPath =~ /category\/(.*)\/bld/))
     {
        @filelist = $buildPath . "/" . $1 . $target . ".mk";
     }
@@ -1189,7 +1189,6 @@ sub findMakefiles
 
     note "found @filelist.";
     return @filelist;
-
 }
 
 #===========================================================================
