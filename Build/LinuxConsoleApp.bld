@@ -33,8 +33,8 @@ setenv: TOOL:                gnu
 setenv: BUILD_NAME:          LinuxConsoleApp
 setenv: TARGET:              LinuxConsoleApp
 
-setenv: BUILD_ROOT:          /cc/bts
-setenv: MAP_ROOT:            ${BUILD_ROOT}/map/card
+setenv: BUILD_ROOT:          ${MASTERMIND_ROOT}
+setenv: MAP_ROOT:            ${BUILD_ROOT}/Build/Target
 setenv: UTIL_ROOT:           ${MAP_ROOT}/${CARD}/util
 setenv: RULES_ROOT:          ${MAP_ROOT}/${CARD}/rules
 setenv: BPF_COMMON:          ${BUILD_ROOT}/build/home/bpf
