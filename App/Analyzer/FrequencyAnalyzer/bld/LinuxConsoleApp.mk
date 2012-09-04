@@ -84,5 +84,5 @@ cleanlib:
 	-rm -f $(LIBRARIES)
 
 cleanall: clean cleanlib
-	-rm -f $(PROGRAM)
+	-rm -f $(BINARY_PATH)/$(PROGRAM)
 
