@@ -39,7 +39,7 @@
 #       test             test source files
 # 
 #     MASTERMIND_ROOT is defined by the environment init script, and 
-#     represents the base vob tag.
+#     represents the base of the source code files.
 #
 #  2. BPF file that specifies the environment entirely such as those
 #     required for Tornado and Loadbuild. For examples of bpf files, 
@@ -89,7 +89,7 @@ sub getBldStr;                  # get bld file string
 sub findCurrentDomain;          # findCurrentDomain()
 
 sub retrieveExecMakefiles;      # retrieveExecMakefiles($executable, $target)
-sub retrieveDomainMakefiles;    # retrieveDomainMakefiles($domain, $target)
+sub retrieveCategoryMakefiles;  # retrieveCategoryMakefiles($category, $target)
 sub retrieveModuleMakefiles;    # retrieveModuleMakefiles($module, $domain, $target)
 
 sub compileMakefiles;           # compileMakefiles (\@makefiles, \@makeargs, \@maketargetRefs)
@@ -243,7 +243,7 @@ else
 
     $Build = &findBldFile(@ARGV[0]);    
 
-    note "using $Build\n";
+    note "INFO: Using $Build\n";
     
     verifyEnv($Build);
     
@@ -256,12 +256,12 @@ else
 
     if (@ARGV[1] =~ /\.o/ || @ARGV[1] =~ /\.flint/)
     {
-        note "Bottom-up Build @ARGV\n";
+        note "INFO: Bottom-up Build @ARGV\n";
         &makeBottomUp($target_make, @ARGV[1]);
     }
     else
     {
-        note "Top-down Build @ARGV\n";
+        note "INFO: Top-down Build @ARGV\n";
         my $nArg = $#ARGV;
         &makeTopDown($target_make, $nArg, @ARGV[1], @ARGV[2], @ARGV[3]);
     }
@@ -320,6 +320,8 @@ sub performBuild ( $ )
   chomp (my $viewtag = `cleartool pwv -short`);
   my $statsLine = "";
   my $statsFile = $ENV{MAKEX_STATS_FILE};
+
+  note "INFO: [performBuild]";
   
   if ( defined $statsFile && $statsFile =~ m{^/} )
   {
@@ -349,7 +351,7 @@ sub performBuild ( $ )
     }
     else
     {
-      $statsLine = "Error opening $statsFile : $!";
+      $statsLine = "ERROR: [performBuild] Error opening $statsFile : $!";
     }
     
     umask($oldmask);
@@ -359,7 +361,7 @@ sub performBuild ( $ )
     $statsLine = "Not written - no MAKEX_STATS_FILE variable set."
   }
 
-  note("Statistics: $statsLine"); 
+  note("INFO: [performBuild] Statistics: $statsLine"); 
 
   return ( wantarray ? ($rc, $statsLine) : $rc );
 }
@@ -525,7 +527,7 @@ sub parseArg {
     {
 	if (@ARGV[1] eq "")
 	{
-	    print "Error: please specify the domain name like: makeX cm2app -cscope=\"base_ps\" base ps\n";
+	    print "ERROR: [parseArg] please specify the domain name like: makeX cm2app -cscope=\"base_ps\" base ps\n";
 	    exit(1);
 	}
 	  
@@ -804,7 +806,7 @@ sub usage
     }
     print <<EOF;
 
-Usage: $prog <build_key> [component] [module] [files...] [options]
+Usage: $prog <build_key> [category] [module] [files...] [options]
        $prog <build_key> [files...] [options]
 
     * note that if there are more than one file specified, they should be
@@ -841,8 +843,8 @@ Note:
 
 Examples:
 
-    makeX LinuxConsole                                  => build Console 
-    makeX LinuxConsole App                              => build Console App
+    makeX LinuxConsoleApp                               => build Linux Console App 
+    makeX LinuxConsoleApp Analyzer                      => build category Analyzer
     makeX btscapp csw eec                               => build module eec
     makeX btscapp csw eec "trapLogBit.o trapLogVxw.o"   => build files
     makeX \$MASTERMIND_ROOT/btsc/bpf/btscapp.bpf                => build using build 
@@ -882,7 +884,7 @@ sub makeTopDown
 
     if ($nArg == 0)
     {
-	note "build target $target_make\n";
+	note "INFO: [makeTopDown] Build target $target_make\n";
 
 	push(@makefiles, retrieveExecMakefiles($target_make));	
 
@@ -890,17 +892,17 @@ sub makeTopDown
 	# logging. This makes -nolog redundant, leave it in for now as
 	# rule may change later....
 	my $nOpt = keys(%opt);
-	note "nOpt:$nOpt\n";
+	note "INFO: [makeTopDown] nOpt:$nOpt\n";
     }
     else
     {
 	if ($nArg == 1)
         {
-	    note "Build category $category\n";
+	    note "INFO: [makeTopDown] Build category $category\n";
 	    my @categories = split(/ /, $category);
 	    foreach my $cat (@categories)
             {
-		push(@makefiles, retrieveDomainMakefiles($cat, $target_make));	
+		push(@makefiles, retrieveCategoryMakefiles($cat, $target_make));	
 	    }
 	}
 	elsif ($nArg == 2)
@@ -917,6 +919,11 @@ sub makeTopDown
 	    makeFiles($category, $module, $target_make, $files);
 	}
 	
+    }
+
+    foreach my $mak (@makefiles)
+    {
+        note "INFO: [makeTopDown] Makefile $mak";
     }
 
     compileMakefiles(\@makefiles, \@makeArgs, \@makeTargets);
@@ -1115,7 +1122,7 @@ sub retrieveExecMakefiles
 {
     my $target = shift;
 
-    note "retrieveExecMakefiles() finding makefiles for $target.";
+    note "INFO: [retrieveExecMakefiles] Finding makefiles for $target.";
 
     my $executableHome = getExecutableHomePath();
     my $buildPath      = "$executableHome/bld";
@@ -1125,17 +1132,18 @@ sub retrieveExecMakefiles
 
 
 #===========================================================================
-# FUNCTION:     retrieveDomainMakefiles($domain, $target)
-# DESCRIPTION:  Takes the domain name and returns a list of makefiles
+# FUNCTION:     retrieveCategoryMakefiles($category, $target)
+# DESCRIPTION:  Takes the category name and returns a list of makefiles
 #               ending with a suffix "$target.mk".  Makefiles have their
 #               full path.
 #
-sub retrieveDomainMakefiles {
-    my $domain = shift;
+sub retrieveCategoryMakefiles {
+    my $category = shift;
     my $target = shift;
-    note "retrieveDomainMakefiles() finding makefiles for $domain.";
+    note "INFO: [retrieveCategoryMakefiles] Finding makefiles for $category.";
 
-    my $buildPath = &getDomainHomePath($domain)."/bld";
+    my $buildPath = &getDomainHomePath($category)."/bld";
+    note "INFO: [retrieveCategoryMakefiles] buildPath $buildPath";
 
     return findMakefiles($buildPath, $target);
 }
@@ -1175,7 +1183,7 @@ sub findMakefiles
     }
     elsif (($buildPath =~ /module\/(.*)\/bld/) || ($buildPath =~ /category\/(.*)\/bld/))
     {
-       @filelist = $buildPath . "/" . $1 . $target . ".mk";
+       @filelist = $buildPath . "/" . $target . ".mk";
     }
     elsif($buildPath =~ /Target\/.*\/bld/)
     {
@@ -1187,7 +1195,7 @@ sub findMakefiles
         warn "No makefiles found in $buildPath with $target.mk suffix\n";
     }
 
-    note "found @filelist.";
+    note "INFO: [findMakefiles] Found @filelist in $buildPath";
     return @filelist;
 }
 
@@ -1212,7 +1220,7 @@ sub findCurrentCard()
 # This routine determines the name of the current domain from current directory
 sub findCurrentDomain
 { 
-    my $domain = &findNextDir(&getCardPath()."/domain");
+    my $domain = &findNextDir(&getCardPath()."/category");
     
     if ($domain eq ""){
 	my $curDir = getcwd;
@@ -1375,7 +1383,7 @@ sub compileMakefiles
 #
 sub getDomainHomePath {
     my $domain = shift;
-    return &getCardPath()."/domain/$domain";
+    return &getCardPath()."/category/$domain";
 }
 
 #===========================================================================
@@ -1427,7 +1435,8 @@ sub cleanENV {
       {
          goto NEXTKEY if ($key =~ /$tmp/);
       }
-      
+
+      note "INFO: [cleanENV] Deleting environment key $key";      
       delete $ENV{$key}; 
       
       NEXTKEY:
@@ -1435,6 +1444,7 @@ sub cleanENV {
 }    
 
 
+# TODO
 #===========================================================================
 # CoverageScope compatibility verification
 #
