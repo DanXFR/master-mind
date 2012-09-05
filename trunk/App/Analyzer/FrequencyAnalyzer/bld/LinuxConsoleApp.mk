@@ -6,18 +6,68 @@
 CXX = g++
 CC  = gcc
 
-# Module
+#==============================================================================
+# Module Name 
+#==============================================================================
+
 CATEGORY = Analyzer
 MODULE = FrequencyAnalyzer
-MODULE_ROOT = $(MAP_ROOT)/$(TARGET)/category/$(CATEGORY)/module/$(MODULE)
+MOD_DIR = $(MAP_ROOT)/$(TARGET)/category/$(CATEGORY)/module/$(MODULE)
+
+# Defines target-specific variables
+include $(RULES_ROOT)/defs.$(TARGET)
+
+# Defines global variables applicable to all builds
+#include $(RULES_ROOT)/macros.default
+
+
+#==============================================================================
+# Module Defines
+#==============================================================================
+
+DEF_MOD := 
+
+
+#==============================================================================
+# Assembler, Compiler and Linker Options for the Module
+#==============================================================================
+
+OPT_ASM_MOD :=
+OPT_CC_MOD  :=
+OPT_CXX_MOD :=
+OPT_LD_MOD  :=
+
+
+#==============================================================================
+# Module Include Paths
+#==============================================================================
+
+INCLUDE_MOD := \
+            -I$(MOD_DIR)/include
+
+
+#==============================================================================
+# List of objects to link
+#==============================================================================
+
+OBJS_TO_LINK := \
+             $(OBJ_DIR)/FrequencyAnalyzer_Main.o
+ 
+
+#==============================================================================
+# External Libraries
+#==============================================================================
+
+LIBS_TO_LINK :=
+
 
 # Paths
 
-INCLUDE_PATH      = $(MODULE_ROOT)/include
-SOURCE_PATH       = $(MODULE_ROOT)/src
-OBJECT_PATH       = $(MODULE_ROOT)/obj
-LIBRARY_PATH      = $(MODULE_ROOT)/lib
-BINARY_PATH       = $(MODULE_ROOT)/bin
+INCLUDE_PATH      = $(MOD_DIR)/include
+SOURCE_PATH       = $(MOD_DIR)/src
+OBJECT_PATH       = $(MOD_DIR)/obj
+LIBRARY_PATH      = $(MOD_DIR)/lib
+BINARY_PATH       = $(MOD_DIR)/bin
 INSTALL_BIN_PATH  = /usr/local/master-mind/bin
 INSTALL_LIB_PATH  = /usr/local/master-mind/lib
 
@@ -51,8 +101,8 @@ all: $(BINARY_PATH)/$(PROGRAM)
 $(BINARY_PATH)/$(PROGRAM): $(OBJECT_PATH)/FrequencyAnalyzer_Main.o $(OBJECTS) $(LIBRARIES)
 	$(CXX) -o $@ $(OBJECT_PATH)/FrequencyAnalyzer_Main.o $(OBJECTS) $(LDPATHS) $(LD_LIBS)
 
-$(OBJECT_PATH)/FrequencyAnalyzer_Main.o: $(MODULE_ROOT)/FrequencyAnalyzer_Main.cpp $(OBJECTS) $(LIBRARIES)
-	$(CXX) -c $(CXXFLAGS) -o $(OBJECT_PATH)/FrequencyAnalyzer_Main.o $(MODULE_ROOT)/FrequencyAnalyzer_Main.cpp
+$(OBJECT_PATH)/FrequencyAnalyzer_Main.o: $(MOD_DIR)/FrequencyAnalyzer_Main.cpp $(OBJECTS) $(LIBRARIES)
+	$(CXX) -c $(CXXFLAGS) -o $(OBJECT_PATH)/FrequencyAnalyzer_Main.o $(MOD_DIR)/FrequencyAnalyzer_Main.cpp
 
 $(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.cc $(INCLUDE_PATH)/%.hpp
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
@@ -85,4 +135,12 @@ cleanlib:
 
 cleanall: clean cleanlib
 	-rm -f $(BINARY_PATH)/$(PROGRAM)
+
+
+#==============================================================================
+# Include the standard build rules
+#==============================================================================
+
+#include $(RULES_ROOT)/rules.default
+
 
