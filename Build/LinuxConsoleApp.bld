@@ -1,5 +1,5 @@
 #==============================================================================
-# Build Parameters File for Linux Console 
+# Build Parameters File for Linux Console Application 
 #==============================================================================
 
 # Determine Host Type and Location for Specific Environments
@@ -22,7 +22,7 @@ unsetenv: MANPATH:
 # The following variables are used in macros.default to expand paths. 
 # They are defined in the makefile whichs "includes macros.default"
 unsetenv: MODULE:
-unsetenv: DOMAIN:
+unsetenv: CATEGORY:
 unsetenv: BUILD:
 
 # Target Specific
@@ -35,8 +35,8 @@ setenv: TARGET:              LinuxConsoleApp
 
 setenv: BUILD_ROOT:          ${MASTERMIND_ROOT}
 setenv: MAP_ROOT:            ${BUILD_ROOT}/Build/Target
-setenv: UTIL_ROOT:           ${MAP_ROOT}/${CARD}/util
-setenv: RULES_ROOT:          ${MAP_ROOT}/${CARD}/rules
+setenv: UTIL_ROOT:           ${MAP_ROOT}/Util
+setenv: RULES_ROOT:          ${MAP_ROOT}/Rules
 setenv: BPF_COMMON:          ${BUILD_ROOT}/build/home/bpf
 
 #include : ${BPF_COMMON}/path.bpf
