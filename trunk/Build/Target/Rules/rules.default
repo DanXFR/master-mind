@@ -1,0 +1,442 @@
+#==============================================================================
+# rules.default
+#
+# This file contains rules for building targets.
+#
+#==============================================================================
+
+#==============================================================================
+# Default build.
+#==============================================================================
+.PHONY: all
+all: $(LINK_TARGET)
+	@$(TIMESTAMP)
+
+#==============================================================================
+# Developer defined build additions
+#
+# This provides additional flexibility for users who want do extra things
+# without impacting the default rules or makefiles.
+#==============================================================================
+
+#include $(BLD_DIR)/macros.extra
+
+
+#==============================================================================
+# Rules for development tools.
+#==============================================================================
+include $(RULES_ROOT)/rules.guru
+include $(RULES_ROOT)/rules.flint
+include $(RULES_ROOT)/rules.tools
+
+
+#==============================================================================
+# All targets have the export and component include path by default.
+#==============================================================================
+INCLUDE_STD := \
+        -I$(INC_DIR) \
+        -I$(EXPORT_DIR) \
+        
+
+#==============================================================================
+# Defines, Flags and include paths
+#==============================================================================
+ASMFLAGS    := $(OPT_ASM_STD) $(OPT_ASM_MOD) $(OPT_ASM_DOMAIN) $(OPT_ASM_LOAD) $(OPT_ASM_EXTRA)
+CFLAGS      := $(OPT_CC_STD)  $(OPT_CC_MOD)  $(OPT_CC_DOMAIN)  $(OPT_CC_LOAD)  $(OPT_CC_EXTRA)
+C++FLAGS    := $(OPT_C++_STD) $(OPT_C++_MOD) $(OPT_C++_DOMAIN) $(OPT_C++_LOAD) $(OPT_C++_EXTRA)
+LDFLAGS     := $(OPT_LD_STD) $(OPT_LD_PARTIAL)  $(OPT_LD_MOD) $(OPT_LD_EXTRA)
+
+DEFINES     := $(DEF_STD)     $(DEF_MOD)     $(DEF_LOAD)    $(DEF_EXTRA)
+INCLUDES    := $(INCLUDE_STD) $(INCLUDE_BSP) $(INCLUDE_MOD) $(INCLUDE_EXTRA) $(INCLUDE_KERNEL)
+
+#==============================================================================
+# add quick-headers directory into include paths
+#==============================================================================
+INCLUDES    := $$INCLUDE_QH_DIR $(INCLUDES) 
+
+#==============================================================================
+# VPATH Macro
+# The VPATH macro should only be used by module test
+# makefiles.
+#
+#==============================================================================
+VPATH = $(TEST_DIR):$(VPATH_MOD):$(VPATH_EXTRA)
+
+
+#==============================================================================
+# OBJS_FOR_CCI
+# Users can define a variable OBJS_FOR_CCI that will list objects that 
+# require code coverage. 
+#
+# See $BUILD_UTIL/templates/macros.extra for an example of its usage.
+#
+ifdef OBJS_FOR_CCI
+
+   # Search for matching objects between OBJS_FOR_CCI and OBJS_TO_LINK
+   OBJS_FOR_CCI_NEW := $(foreach obj,$(OBJS_FOR_CCI), $(findstring $(obj),$(OBJS_TO_LINK)))
+
+   # Filters out the objects that require code coverage
+   OBJS_TO_LINK := $(filter-out $(OBJS_FOR_CCI_NEW), $(OBJS_TO_LINK))
+
+   # Replaces the .o with the .occi to create objects with code coverage
+   OBJS_FOR_CCI := $(patsubst %.o,%.occi,$(OBJS_FOR_CCI_NEW))
+
+   # Replace the objects to the link with the updated list
+   OBJS_TO_LINK := $(OBJS_TO_LINK) \
+                   $(OBJS_FOR_CCI)
+
+endif  # OBJS_FOR_CCI
+
+
+#==============================================================================
+# CoverageScope Rule - dhw 2004/01/27
+#
+# Add instrumentor, "coverage" and options in front of compiler call.
+#
+# CSCOPE_THIS_DOMAIN is defined in macros.default as CSCOPE_$(CSCOPE_DOMAIN)
+# which builds a env var name like CSCOPE_oam.
+#
+# CSCOPE_THIS_MODULE is defined in macros.default as
+# CSCOPE_$(CSCOPE_DOMAIN)_($(MODULE) which builds a env var name
+# like CSCOPE_mw_acl.
+#
+# The $($()) double de-reference gets the value of CSCOPE_???
+#
+ifeq($($(CSCOPE_THIS_DOMAIN)), 1)
+    CC  :=  $(CSCOPE_CC)
+    C++ :=  $(CSCOPE_C++)
+else
+    ifeq ($($(CSCOPE_THIS_MODULE)), 1)
+        CC  :=  $(CSCOPE_CC)
+        C++ :=  $(CSCOPE_C++)
+    endif
+endif
+
+
+#==============================================================================
+# OBJS_FOR_DEBUG
+# Users can define a variable OBJS_FOR_DEBUG that will list objects 
+# that use the OPT_DEBUG, INC_DEBUG and DEF_DEBUG for building. 
+#
+# See $BUILD_UTIL/templates/macros.extra for an example of its usage.
+#
+ifdef OBJS_FOR_DEBUG
+
+   # Search for matching objects between OBJS_FOR_DEBUG and OBJS_TO_LINK
+   OBJS_FOR_DEBUG_NEW := $(foreach obj,$(OBJS_FOR_DEBUG), $(findstring $(obj),$(OBJS_TO_LINK)))
+
+   # Filters out the objects that require debug
+   OBJS_TO_LINK := $(filter-out $(OBJS_FOR_DEBUG_NEW),$(OBJS_TO_LINK))
+
+   # Replaces the .o with the .odebug to create debug objects 
+   OBJS_FOR_DEBUG := $(patsubst %.o,%.odebug,$(OBJS_FOR_DEBUG))
+
+   # Replaces the .otest with the .odebug to create debug objects 
+   OBJS_FOR_DEBUG := $(patsubst %.otest,%.odebug,$(OBJS_FOR_DEBUG))
+
+   # Replace the objects to the link with the updated list
+   OBJS_TO_LINK := $(OBJS_TO_LINK) \
+                   $(OBJS_FOR_DEBUG)
+
+endif  # OBJS_FOR_DEBUG
+
+#===============================================================================
+# If LINK_ONLY is defined, then module libraries will be linked together 
+# without recompiling the objects. 
+# This is done by moving the libraries in OBJS_TO_LINK to LIBS_TO_LINK
+#
+# This is ORDER DEPENDENT!! OBJS_TO_LINK NEEDS TO BE FIRST in the link order.
+# as code is only pulled from an archive (.a) if it has already been referenced
+#===============================================================================
+ifdef LINK_ONLY
+   LIBS_TO_LINK := $(OBJS_TO_LINK) $(LIBS_TO_LINK)
+   OBJS_TO_LINK :=
+endif
+
+#==============================================================================
+# RULES FOR GENERATION OF VARIOUS MODULE OBJECTS
+#   (.o, .otest, .occi, .odebug)
+#==============================================================================
+
+#==============================================================================
+# Rule: STANDARD MODULE OBJECT from ASSEMBLER in $(SRC_DIR)
+#
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.asm
+	@$(TIMESTAMP)
+	$(ASM) $(ASMFLAGS) $(DEFINES) $(INCLUDES) -o $@ $<;
+
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.src
+	@$(TIMESTAMP)
+	$(ASM) $(ASMFLAGS) $(DEFINES) $(INCLUDES) -o $@ $<;
+
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.s
+	@$(TIMESTAMP)
+	$(ASM) $(ASMFLAGS) $(DEFINES) $(INCLUDES) -o $@ $<;
+
+
+#==============================================================================
+# Rule: STANDARD MODULE OBJECT from C CODE in $(SRC_DIR)
+#       Do not flint if AVOID_FLINT is defined.
+#
+ifndef AVOID_FLINT
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.c $(FLINT_DIR)/%.flint 
+else
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
+endif
+	@$(TIMESTAMP)
+	-@$(UTIL_ROOT)/makelink.pl $(LIB_DIR)/lib$(MODULE).$(LINK_EXT).headers
+	$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@;
+
+
+#==============================================================================
+# Rule: STANDARD MODULE OBJECT from C++ CODE in $(SRC_DIR)
+#       Do not flint if AVOID_FLINT is defined.
+#
+ifndef AVOID_FLINT
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cxx $(FLINT_DIR)/%.flint 
+else
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cxx
+endif
+	@$(TIMESTAMP)
+	-@$(UTIL_ROOT)/makelink.pl $(LIB_DIR)/lib$(MODULE).$(LINK_EXT).headers
+	$(C++) $(C++FLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@;
+
+
+#==============================================================================
+# Rule: MODULE DEBUG OBJECT from C CODE in $(SRC_DIR)
+#       Do not flint if AVOID_FLINT is defined..
+#
+ifndef AVOID_FLINT
+$(OBJ_DIR)/%.odebug : $(SRC_DIR)/%.c $(FLINT_DIR)/%.flint 
+else
+$(OBJ_DIR)/%.odebug : $(SRC_DIR)/%.c
+endif
+	@$(TIMESTAMP)
+	echo Building $(SRC_DIR)/%.c using debug.
+	$(CC)  $(CFLAGS) $(OPT_DEBUG) $(DEFINES) $(DEF_DEBUG) $(INCLUDES) $(INC_DEBUG) -c $< -o $@;
+
+
+#==============================================================================
+# Rule: MODULE DEBUG OBJECT from C++ CODE in $(SRC_DIR)
+#
+ifndef AVOID_FLINT
+$(OBJ_DIR)/%.odebug : $(SRC_DIR)/%.cxx $(FLINT_DIR)/%.flint 
+else
+$(OBJ_DIR)/%.odebug : $(SRC_DIR)/%.cxx
+endif
+	@$(TIMESTAMP)
+	echo Building $(SRC_DIR)/%.c using debug.
+	$(C++) $(CFLAGS) $(OPT_DEBUG) $(DEFINES) $(DEF_DEBUG) $(INCLUDES) $(INC_DEBUG) -c $< -o $@;
+
+
+#==============================================================================
+# Rule: MODULE TEST OBJECT from C CODE in $(VPATH)
+#       
+# This rule is different from the rule for .o files in that it 
+# enables the user to specify the VPATH macro to search for the 
+# source code in various locations.
+#
+ifndef AVOID_FLINT
+$(OBJ_DIR)/%.otest : %.c $(FLINT_DIR)/%.flint 
+else
+$(OBJ_DIR)/%.otest : %.c
+endif
+	@$(TIMESTAMP)
+	$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@;
+
+
+#==============================================================================
+# Rule: MODULE TEST OBJECT from C++ CODE in $(VPATH)
+#       
+# This rule is different from the rule for .o files in that it 
+# enables the user to specify the VPATH macro to search for the 
+# source code in various locations.
+#
+ifndef AVOID_FLINT
+$(OBJ_DIR)/%.otest : %.cxx $(FLINT_DIR)/%.flint 
+else
+$(OBJ_DIR)/%.otest : %.cxx
+endif
+	@$(TIMESTAMP)
+	$(C++) $(C++FLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@;
+
+#==============================================================================
+# Rule: MODULE DEBUG TEST OBJECT from C CODE in $(VPATH)
+#       
+# This rule is different from the rule for .o files in that it 
+# enables the user to specify the VPATH macro to search for the 
+# source code in various locations.
+#
+ifndef AVOID_FLINT
+$(OBJ_DIR)/%.odebug : %.c $(FLINT_DIR)/%.flint 
+else
+$(OBJ_DIR)/%.odebug : %.c
+endif
+	@$(TIMESTAMP)
+	echo Building $(SRC_DIR)/%.c using debug.
+	$(C++) $(CFLAGS) $(OPT_DEBUG) $(DEFINES) $(DEF_DEBUG) $(INCLUDES) $(INC_DEBUG) -c $< -o $@;
+
+
+#==============================================================================
+# Rule: MODULE DEBUG TEST OBJECT from C++ CODE in $(VPATH)
+#       
+# This rule is different from the rule for .o files in that it 
+# enables the user to specify the VPATH macro to search for the 
+# source code in various locations.
+#
+ifndef AVOID_FLINT
+$(OBJ_DIR)/%.odebug : %.cxx $(FLINT_DIR)/%.flint 
+else
+$(OBJ_DIR)/%.odebug : %.cxx
+endif
+	@$(TIMESTAMP)
+	echo Building %.cxx using debug.
+	$(C++) $(CFLAGS) $(OPT_DEBUG) $(DEFINES) $(DEF_DEBUG) $(INCLUDES) $(INC_DEBUG) -c $< -o $@;
+
+
+#==============================================================================
+# Rule: MODULE OBJECT WITH CODE COVERAGE INSTRUMENTATION from C CODE
+#       in $(SRC_DIR).
+#       Do not flint if AVOID_FLINT is defined.
+#
+$(OBJ_DIR)/%.occi : $(SRC_DIR)/%_ccTag.c
+	@$(TIMESTAMP)
+ifeq ($(TOOL), diab)
+	$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -w1604 -c $< -o $@;
+else
+	$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -Wno-unused -x cpp-output -c $< -o $@;
+endif
+
+ifndef AVOID_FLINT
+$(SRC_DIR)/%_ccTag.c : $(SRC_DIR)/%.c $(FLINT_DIR)/%.flint 
+else
+$(SRC_DIR)/%_ccTag.c : $(SRC_DIR)/%.c
+endif
+	@$(TIMESTAMP)
+	$(CC) -E $(CFLAGS) $(DEFINES) $(INCLUDES) -DCCTAG_ENABLED -c $< > $@;
+	ccTag $@;
+
+
+#==============================================================================
+# Rule: MODULE OBJECT WITH CODE COVERAGE INSTRUMENTATION from C++ CODE
+#       in $(SRC_DIR).
+#       Do not flint if AVOID_FLINT is defined.
+#
+$(OBJ_DIR)/%.occi : $(SRC_DIR)/%_ccTag.cxx
+	@$(TIMESTAMP)
+ifeq ($(TOOL), diab)
+	$(C++) $(C++FLAGS) $(DEFINES) $(INCLUDES) -w1604 -c $< -o $@;
+else
+	$(C++) $(C++FLAGS) $(DEFINES) $(INCLUDES) -Wno-unused -x c++-cpp-output -c $< -o $@;
+endif
+
+ifndef AVOID_FLINT
+$(SRC_DIR)/%_ccTag.cxx : $(SRC_DIR)/%.cxx $(FLINT_DIR)/%.flint 
+else
+$(SRC_DIR)/%_ccTag.cxx : $(SRC_DIR)/%.cxx
+endif
+	@$(TIMESTAMP)
+	$(C++) -E $(C++FLAGS) $(DEFINES) $(INCLUDES) -DCCTAG_ENABLED -c $< > $@;
+	ccTag $@;
+
+
+#==============================================================================
+# RULES FOR GENERATION OF VARIOUS MODULE LIBRARIES
+#   (.lnk, .lnk.munched)
+#==============================================================================
+#===============================================================================
+# If LINK_EXT is not defined, use a default of .lnk. 
+#
+# LINK_EXT allows a module to additional processing to a MODULE LIBRARY after
+# it is linked together.
+#
+# For example, a module makefile might do this:
+#
+#   #==============================================================================
+#   # Force rules.default to create intermediate Libraries so we can post process
+#   # it and add the symbol table.
+#   #==============================================================================
+#   LINK_EXT := prelnk
+#
+#   #==============================================================================
+#   # Include the module build rules.
+#   #==============================================================================
+#   include $(RULES_ROOT)/rules.default
+#   
+#   #==============================================================================
+#   # Special Post link processing (this example creates a symbol table
+#   # and appends it to the module library)
+#   #==============================================================================
+#   $(LIB_DIR)/lib$(MODULE).lnk : $(LIB_DIR)/lib$(MODULE).$(LINK_EXT)
+#  	-@ $(RM) $@ 
+#  	@ $(TIMESTAMP)
+#  	$(MKSYMTBL) $< > $(LIB_DIR)/symTbl.c
+#   @echo "Do Something Here"
+#  	$(CC) $(OPT_CC_LIP) -I$(WIND_BASE)/target/h -DCPU=CPU32 -o $(LIB_DIR)/symTbl.o -c $(LIB_DIR)/symTbl.c
+#  	$(LD) $(OPT_LD_PARTIAL) -r -o $@ $< $(LIB_DIR)/symTbl.o
+#  	-@ $(RM) $(LIB_DIR)/symTbl.o
+#  	-@ $(RM) $(LIB_DIR)/symTbl.c
+#===============================================================================
+ifndef LINK_EXT
+    LINK_EXT := lnk
+endif
+
+#==============================================================================
+# Rule: MUNCHED MODULE LIBRARY from MODULE LIBRARY
+#       
+# Munches the module library.
+#
+$(LIB_DIR)/%.lnk.munched : $(LIB_DIR)/%.lnk 
+	@$(TIMESTAMP)
+	@echo "\nMunching app...\n"
+	$(NM) $(OPT_NM) $< | $(MUNCH) > $(OBJ_DIR)/ctdt.c
+	$(CC) -traditional -fdollars-in-identifiers -c $(OBJ_DIR)/ctdt.c -o $(OBJ_DIR)/ctdt.o
+	@echo "\nMunching complete, appetite satified....\n"
+	$(LD) $(LDFLAGS) -o $@ $< $(OBJ_DIR)/ctdt.o
+
+
+#==============================================================================
+# Rule: MODULE LIBRARY from MODULE OBJS and LIBS
+#
+# Note: Off-target builds is using all object files at final link stage to support
+#       PureCoverage, so the module link file is nothing more than
+#       a text file with the list of .o files in the module. See the
+#       DOMAIN LIBRARY rule in rules.domain for more details.
+#
+$(LIB_DIR)/%.$(LINK_EXT) : $(OBJS_TO_LINK) $(DEPS_FOR_LINK) 
+	@$(TIMESTAMP)
+	-@$(UTIL_ROOT)/makelink.pl -clean
+ifeq ($(LOAD), off)
+	printf "$(OBJS_TO_LINK) $(LIBS_TO_LINK) " > $@
+else
+	$(LD) $(LDFLAGS) -o $@ $(OBJS_TO_LINK) $(LIBS_TO_LINK)
+endif
+
+#==============================================================================
+# Depend Rule
+#
+.PHONY: depend
+depend:
+	@echo ""
+	@echo "*** Clearmake automatically tracks dependencies."
+	@echo "    To determine the dependencies for a given binary,"
+	@echo "    execute the command 'ct catcr <binary_name>' ***"
+	@echo ""
+
+
+#==============================================================================
+# Clean Rule
+#
+.PHONY: clean
+clean:
+	$(RM) $(SRC_DIR)/*_ccTag*
+	$(RM) $(OBJ_DIR)/*.o
+	$(RM) $(OBJ_DIR)/*.otest
+	$(RM) $(OBJ_DIR)/*.odebug
+	$(RM) $(OBJ_DIR)/*.nasa[w]
+	$(RM) $(LIB_DIR)/*.lnk
+	$(RM) $(LIB_DIR)/*.lnk.nasa[w]
+	$(RM) $(LIB_DIR)/*.itelnk*
+	$(RM) $(LIB_DIR)/*.munched
+	$(RM) $(FLINT_DIR)/*.flint
+
