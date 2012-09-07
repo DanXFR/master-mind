@@ -55,6 +55,7 @@ OBJ_DIR      := $(MOD_DIR)/obj/$(TARGET)
 LIB_DIR      := $(MOD_DIR)/lib/$(TARGET)
 #FLINT_DIR    := $(MOD_DIR)/flint/$(TARGET)
 INC_DIR      := $(MOD_DIR)/include
+EXPORT_DIR   := $(CATEGORY_ROOT)/$(CATEGORY)/export
 SRC_DIR      := $(MOD_DIR)/src
 TEST_DIR     := $(MOD_DIR)/unittest
 BUILD_TARGET += $(BIN_DIR)/$(PROGRAM)
