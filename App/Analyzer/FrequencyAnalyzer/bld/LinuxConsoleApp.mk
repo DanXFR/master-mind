@@ -1,25 +1,15 @@
 
 .PHONY: all install clean cleanlib cleanall
 
-# Compiler and tools
-
-CXX = g++
-CC  = gcc
-
 #==============================================================================
 # Module Name 
 #==============================================================================
 
-CATEGORY = Analyzer
-MODULE = FrequencyAnalyzer
-MOD_DIR = $(MAP_ROOT)/$(TARGET)/category/$(CATEGORY)/module/$(MODULE)
+CATEGORY := Analyzer
+MODULE   := FrequencyAnalyzer
 
-# Defines target-specific variables
 include $(RULES_ROOT)/defs.$(TARGET)
-
-# Defines global variables applicable to all builds
-#include $(RULES_ROOT)/macros.default
-
+include $(RULES_ROOT)/macros.default
 
 #==============================================================================
 # Module Defines
@@ -40,7 +30,7 @@ OPT_LD_MOD  :=
 
 #==============================================================================
 # Module Include Paths
-#==============================================================================
+#================================================= =============================
 
 INCLUDE_MOD := \
             -I$(MOD_DIR)/include
@@ -60,63 +50,48 @@ OBJS_TO_LINK := \
 
 LIBS_TO_LINK :=
 
+OBJECTS :=
 
-# Paths
+LIBRARIES := \
+    $(LIB_DIR)/libCharFrequency.so
 
-INCLUDE_PATH      = $(MOD_DIR)/include
-SOURCE_PATH       = $(MOD_DIR)/src
-OBJECT_PATH       = $(MOD_DIR)/obj
-LIBRARY_PATH      = $(MOD_DIR)/lib
-BINARY_PATH       = $(MOD_DIR)/bin
-INSTALL_BIN_PATH  = /usr/local/master-mind/bin
-INSTALL_LIB_PATH  = /usr/local/master-mind/lib
-
-PROGRAM = FrequencyAnalyzer
-
-OBJECTS =
-
-LIBRARIES = \
-    $(LIBRARY_PATH)/libCharFrequency.so
-
-LD_LIBS = \
+LD_LIBS := \
     -lCharFrequency
 
-DEFINES =
+INCLUDES := \
+    -I$(INC_DIR)
 
-INCLUDES = \
-    -I$(INCLUDE_PATH)
+LDPATHS := \
+    -L$(LIB_DIR)
 
-LDPATHS = \
-    -L$(LIBRARY_PATH)
-
-CXXFLAGS = -g -fno-builtin -Wall -Wwrite-strings -Wsign-compare -Werror $(DEFINES) $(INCLUDES)
-CFLAGS   = -g -fno-builtin -Wall -Wwrite-strings -Wsign-compare -Werror $(DEFINES) $(INCLUDES)
+CXXFLAGS := -g -fno-builtin -Wall -Wwrite-strings -Wsign-compare -Werror $(DEF_MOD) $(INCLUDES)
+CFLAGS   := -g -fno-builtin -Wall -Wwrite-strings -Wsign-compare -Werror $(DEF_MOD) $(INCLUDES)
 
 # Rules: Must use TAB before the command.
 
-.DEFAULT_GOAL := $(BINARY_PATH)/$(PROGRAM)
+.DEFAULT_GOAL := $(BUILD_TARGET)
 
-all: $(BINARY_PATH)/$(PROGRAM)
+all: $(BUILD_TARGET)
 
-$(BINARY_PATH)/$(PROGRAM): $(OBJECT_PATH)/FrequencyAnalyzer_Main.o $(OBJECTS) $(LIBRARIES)
-	$(CXX) -o $@ $(OBJECT_PATH)/FrequencyAnalyzer_Main.o $(OBJECTS) $(LDPATHS) $(LD_LIBS)
+$(BUILD_TARGET): $(OBJ_DIR)/FrequencyAnalyzer_Main.o $(OBJECTS) $(LIBRARIES)
+	$(CXX) -o $@ $(OBJ_DIR)/FrequencyAnalyzer_Main.o $(OBJECTS) $(LDPATHS) $(LD_LIBS)
 
-$(OBJECT_PATH)/FrequencyAnalyzer_Main.o: $(MOD_DIR)/FrequencyAnalyzer_Main.cpp $(OBJECTS) $(LIBRARIES)
-	$(CXX) -c $(CXXFLAGS) -o $(OBJECT_PATH)/FrequencyAnalyzer_Main.o $(MOD_DIR)/FrequencyAnalyzer_Main.cpp
+$(OBJ_DIR)/FrequencyAnalyzer_Main.o: $(MOD_DIR)/FrequencyAnalyzer_Main.cpp $(OBJECTS) $(LIBRARIES)
+	$(CXX) -c $(CXXFLAGS) -o $(OBJ_DIR)/FrequencyAnalyzer_Main.o $(MOD_DIR)/FrequencyAnalyzer_Main.cpp
 
-$(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.cc $(INCLUDE_PATH)/%.hpp
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cc $(INC_DIR)/%.hpp
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-$(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.cpp $(INCLUDE_PATH)/%.hpp
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(INC_DIR)/%.hpp
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-$(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.cxx $(INCLUDE_PATH)/%.hpp
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cxx $(INC_DIR)/%.hpp
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-$(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.c $(INCLUDE_PATH)/%.h
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INC_DIR)/%.h
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-$(LIBRARY_PATH)/lib%.so: $(OBJECT_PATH)/%.o
+$(LIB_DIR)/lib%.so: $(OBJ_DIR)/%.o
 	$(CC) $(CFLAGS) -shared -o $@ $< -lstdc++
 
 # Use - before the command to ignore error.
@@ -124,17 +99,17 @@ $(LIBRARY_PATH)/lib%.so: $(OBJECT_PATH)/%.o
 install:
 	-mkdir -p $(INSTALL_BIN_PATH)
 	-mkdir -p $(INSTALL_LIB_PATH)
-	-cp $(PROGRAM) $(INSTALL_BIN_PATH)
+	-cp $(BUILD_TARGET) $(INSTALL_BIN_PATH)
 	-cp $(LIBRARIES) $(INSTALL_LIB_PATH)
 
 clean:
-	-rm -f $(OBJECT_PATH)/*
+	-rm -f $(OBJ_DIR)/*
 
 cleanlib:
-	-rm -f $(LIBRARIES)
+	-rm -f $(LIB_DIR)/*
 
 cleanall: clean cleanlib
-	-rm -f $(BINARY_PATH)/$(PROGRAM)
+	-rm -f $(BIN_DIR)/*
 
 
 #==============================================================================
