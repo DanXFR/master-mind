@@ -8,23 +8,19 @@
 # Category Name
 #==============================================================================
 
-CATEGORY      := Analyzer
-#CATEGORY_DIR = $(OAM_HOME)
+CATEGORY := Analyzer
 
-# Defines target-specific variables
 include $(RULES_ROOT)/defs.$(TARGET)
-
-# Defines global variables applicable to all builds
-#include $(RULES_ROOT)/macros.default
+include $(RULES_ROOT)/macros.default
 
 
 #==============================================================================
 # Module Names
 #==============================================================================
 
-MODULE := \
-       FrequencyAnalyzer \
-       IndexOfCoincidence
+MODULES := \
+        FrequencyAnalyzer \
+#        IndexOfCoincidence
 
 
 #==============================================================================
@@ -45,6 +41,6 @@ OPT_LD_CATEGORY :=
 # Include the category build rules.
 #==============================================================================
 
-#include $(RULES_ROOT)/rules.domain
+include $(RULES_ROOT)/rules.category
 
 
