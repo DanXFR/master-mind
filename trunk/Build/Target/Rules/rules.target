@@ -43,7 +43,7 @@ LDFLAGS := $(OPT_LD_STD) $(OPT_LD_EXTRA)
 
 MAKEFILELIST += \
              $(foreach cat, $(CATEGORIES), \
-             $(MAP_ROOT)/$(TARGET)/category/$(cat)/bld/$(TARGET).mk)
+             $(CATEGORY_ROOT)/$(cat)/bld/$(TARGET).mk)
 
 
 #==============================================================================
