@@ -16,7 +16,7 @@ include $(RULES_ROOT)/macros.default
 
 CATEGORIES := \
            Analyzer \
-           Encypter-Decrypter  
+           Encrypter-Decrypter  
 
 
 #==============================================================================
