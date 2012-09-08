@@ -152,7 +152,7 @@ endif
 
 $(LIB_DIR)/lib%.so : $(OBJ_DIR)/%.o 
 	@$(TIMESTAMP)
-	$(LD) $(OPT_LD_STD) -shared -o $@ $<
+	$(LD) $(OPT_LD_STD) $(SYSTEM_LIBS) -shared -o $@ $<
 
 
 #==============================================================================
@@ -161,7 +161,7 @@ $(LIB_DIR)/lib%.so : $(OBJ_DIR)/%.o
 
 $(BUILD_TARGET) : $(OBJS_TO_LINK) $(LIBS_TO_LINK) 
 	@$(TIMESTAMP)
-	$(LD) $(LDFLAGS) -o $@ $(OBJS_TO_LINK) $(LIBS_TO_LINK)
+	$(LD) $(OPT_LD_STD) -o $@ $(OBJS_TO_LINK) $(OPT_LD_MOD) $(SYSTEM_LIBS)
 
 
 #==============================================================================
