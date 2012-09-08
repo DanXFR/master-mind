@@ -4,6 +4,8 @@
 #
 #==============================================================================
 
+BUILD := MasterMind
+
 include $(RULES_ROOT)/defs.$(TARGET)
 include $(RULES_ROOT)/macros.default
 

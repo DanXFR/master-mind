@@ -93,7 +93,7 @@ BUILD_DIR    := $(MAP_ROOT)/$(TARGET)
 BLD_DIR      := $(BUILD_DIR)/bld
 BIN_DIR      := $(BUILD_DIR)/bin/$(TARGET)
 LIB_DIR      := $(BUILD_DIR)/lib/$(TARGET)
-BUILD_TARGET := $(patsubst %,$(BIN_DIR)/%,$(BUILD))
+BUILD_TARGET := $(BIN_DIR)/$(BUILD)
 endif # BUILD directory structure
 
 
