@@ -44,7 +44,8 @@ INCLUDE_MOD :=
 #==============================================================================
 
 OBJS_TO_LINK := \
-             $(TEST_DIR)/TestFrequencyAnalyzer_Main.otest
+             $(TEST_DIR)/TestFrequencyAnalyzer_Main.otest \
+             $(TEST_DIR)/TestCharFrequency.otest
  
 
 #==============================================================================
