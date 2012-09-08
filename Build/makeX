@@ -85,6 +85,9 @@ sub note;                       # note($string)
 sub makeTopDown;                # make top down build
 sub veryEnv;                    # verify env
 sub getBldStr;                  # get bld file string
+sub readBLD;                    # read bld file
+sub setEnvVar;                  # setEnvVar($EnvVar, $Value)
+sub unSetEnvVar;                # unSetEnvVar($EnvVar)
 
 sub findCurrentDomain;          # findCurrentDomain()
 
@@ -110,10 +113,6 @@ my $error="ERROR";
 my @makeTargets="";
 my $CFLAGS="";
 
-my $CSFLAGS="";             #CoverageScope options
-my $cscope_used="";         #CoverageScope specified
-my $purecoverage_used="";
-
 my $MASTERMIND_ROOT = "";
 my $ITE_ROOT        = "";
 my $UTIL_ROOT       = "";
@@ -136,6 +135,11 @@ my $DebugTopDir;
 my $DebugDir;
 my $KeepDebugDirs;
 my $enableLogs;
+
+my $linenum = 0;
+my $ifCond = 1;
+my $ifBit = 0x1;
+my @fileHandlers;
 
 my $Build="";
 
@@ -176,7 +180,6 @@ my @envList =
 # in hash table "opt".
 
 use Getopt::Long;
-use BldDecoder;
 
 # Stores the program filename without suffix
 my $prog = basename($0, qw(.pl));
@@ -194,24 +197,15 @@ my $optres = GetOptions(\%opt, (
                                 "file:s@",
                                 "mflags:s@",
                                 "target:s@",
-                                "avoid_flint",
-                                "debug",
-                                "guru",
                                 "help",
-                                "do_flint",
                                 "link_only",
-                                "pure_coverage",
-                                "purify",
-                                "quantify",
                                 "verbose",
                                 "keep_env",
                                 "clean",
                                 "cleanall",
-                                "flint_only",
-                                "use_wildcard",
-                                "distpackage",
-                                "cscope:s@",
-                                "csflags:s@"
+                                "flint",
+                                "install",
+                                "unittest"
                         ));
 
 $enableLogs = ( @ARGV == 1 ? 1 : 0 ) unless defined $enableLogs;
@@ -249,11 +243,6 @@ else
     verifyEnv($Build);
     
     &parseArg();
-
-    if ( $cscope_used  eq "true")
-    {
-        verifyCScopeCompat();
-    }
 
     if (@ARGV[1] =~ /\.o/ || @ARGV[1] =~ /\.flint/)
     {
@@ -522,60 +511,12 @@ sub GzipBuildLog() {
 # Start Processing Command-Line Parameters
 sub parseArg {
 #-------------------------
-# -cscope specified dhw 2003/12/18
-#    Make environment list of modules that are to be Coveragecoped.
-    if ($opt{cscope})
-    {
-	if (@ARGV[1] eq "")
-	{
-	    print "ERROR: [parseArg] please specify the domain name like: makeX cm2app -cscope=\"base_ps\" base ps\n";
-	    exit(1);
-	}
-	  
-	my @cscope_array = map {split /[ ]/} @{$opt{cscope}};
-	foreach my $cscope_target (@cscope_array)
-	{
-	    my $cscope_env = "CSCOPE_" . $cscope_target;
-	    $ENV{$cscope_env} = 1;
-	    note "Setting env var $cscope_env = $ENV{$cscope_env}\n";
-	    $cscope_used="true";
-	}
-
-        # Setup HOME env var for default CoverageScope project
-	my $homedir = "HOME";
-	$ENV{HOME}  = (getpwuid($<))[7];
-	note "Setting env var HOME = $ENV{HOME}\n";
-    }
-
-#-------------------------
-# -csflags specified dhw 2004/01/05
-#    CoverageScope options.
-    if ($opt{csflags})
-    {
-	# Parse list of modules passed in with -module option
-	my $csflag_list = join(',',@{$opt{csflags}});
-	my @csflags = map {split /[$delim]/} $csflag_list;
-	note "Main() -csflags specified with list: @csflags.";
-	
-	foreach my $csflag (@csflags)
-	{
-	    $CSFLAGS .= $csflag . " ";
-	}
-    }
-    
-    if ($CSFLAGS ne "")
-    {
-	$ENV{CSCOPE_FLAGS} = $CSFLAGS;
-	note "csflags is $CSFLAGS\n";
-    }
-
-#-------------------------
-# -flint_only specified
+# -flint specified
 #    Add "flint" to the list of targets to make.
-    if ($opt{flint_only})
+    if ($opt{flint})
     {
-	note "Main() -flint_only specified.";
-	push(@makeTargets, "flint");
+	note "Main() -flint specified.";
+	push(@makeTargets, "FLINT=defined");
     }
 
 
@@ -598,129 +539,31 @@ sub parseArg {
     }
 
 #-------------------------
-# -package specified
-#    Add "package" to the list of targets to make.
-    if ($opt{package})
+# -install specified
+#    Add "cleanall" to the list of targets to make.
+    if ($opt{install})
     {
-	note "Main() -package specified.";
-	push(@makeTargets, "package");
+	note "Main() -install specified.";
+	push(@makeTargets, "install");
     }
 
 #-------------------------
-# -distpackage specified
-#    Add "distpackage" to the list of targets to make.
-    if ($opt{distpackage})
+# -unittest specified
+#    Add "cleanall" to the list of targets to make.
+    if ($opt{unittest})
     {
-	note "Main() -distpackage specified.";
-	push(@makeTargets, "distpackage");
+	note "Main() -unittest specified.";
+	push(@makeTargets, "unittest");
     }
-
 
 #-------------------------
 # -link_only specified
-#    Set AVOID_FLINT to defined for this build.
+#    Set LINK_ONLY to defined for this build.
     if ($opt{link_only})
     {
 	note "Main() -link_only specified.";
 	push(@makeArgs, "LINK_ONLY=defined");
 	push(@makeArgs, "LINK_MODULES_WITHOUT_RECOMPILE=defined");
-    }
-
-
-#-------------------------
-# -avoid_flint specified
-#    Set AVOID_FLINT to defined for this build.
-    if ($opt{avoid_flint})
-    {
-	note "Main() -avoid_flint specified.";
-	push(@makeArgs, "AVOID_FLINT=defined");
-    }
-
-
-
-#-------------------------
-# -do_flint specified
-#    Set DO_FLINT to defined for this build.
-    if ($opt{do_flint})
-    {
-	note "Main() -do_flint specified.";
-	push(@makeArgs, "DO_FLINT=defined");
-    }
-
-    
-#-------------------------
-# -purify specified
-#    Set USE_PURIFY to defined for this build.
-    if ($opt{purify})
-    {
-	note "Main() -purify specified.";
-	push(@makeArgs, "USE_PURIFY=defined");
-    }
-    
-#-------------------------
-# -pure_coverage specified
-#    Set USE_PURECOVERAGE to defined for this build.
-    if ($opt{pure_coverage})
-    {
-	note "Main() -pure_coverage specified.";
-	push(@makeArgs, "USE_PURECOVERAGE=defined");
-	$purecoverage_used="true";
-    }
-
-#-------------------------
-# -quantify specified
-#    Set USE_quantify to defined for this build.
-    if ($opt{quantify})
-    {
-	note "Main() -quantify specified.";
-	push(@makeArgs, "USE_QUANTIFY=defined");
-    }
-
-#-------------------------
-# -guru specified
-#    Set GURU to defined for this build.
-    if ($opt{guru})
-    {
-	note "Main() -guru specified.";
-	push(@makeArgs, "GENERATE_GURU_LOGS=defined");
-    }
-
-#-------------------------
-# -target option specified
-#    makefile target
-    if ($opt{target})
-    {
-        # Parse list of modules passed in with -module option
-	my $target_list = join(',',@{$opt{target}});
-	my @targets = map {split /[$delim]/} $target_list;
-	note "Main() -targets specified with list: @targets.";
-	
-	foreach my $target (@targets)
-	{
-	    note "target is $target @{$opt{target}}\n";
-            
-	    # codegen target needs to be build with -F mflag. 
-	    # Record for further processing
-	    $mFlagF = "1" if ($target eq "codegen");
-	    
-	    push(@makeTargets, $target);
-            # $MAKECMDGOALS is not set by clearmake
-            push(@makeArgs, "MAKECMDGOALS='$target'");
-        }
-    }
-
-#-------------------------
-# -cflags or -debug option specified
-#    Compiles the load with compile flags
-    if ($opt{debug})
-    {
-	if ($ENV{DEBUG_FLAG}){
-	    $CFLAGS .= $ENV{DEBUG_FLAG} . " "; 
-	}
-	else {
-	    $CFLAGS .= "-g ";
-	}
-
     }
 
     if ($opt{cflags})
@@ -790,12 +633,7 @@ sub parseArg {
 	note "Main() -file specified with list: @files.";
 	
 	push(@makefiles, @files);
-	
-	if ($cscope_used eq "true")
-	{
-	  $ENV{CSCOPE_DOMAIN} = @ARGV[1];
-	}
-		
+
 	compileMakefiles(\@makefiles, \@makeArgs, \@makeTargets);
 	exit(0);
     }
@@ -828,24 +666,15 @@ Flags:
     -verbose		Show debug information for $prog
 
     -link_only          Link together modules without recompile.
-    -flint_only         Flint without compiling.
 
-    -avoid_flint 	Disables flinting during compile.
-    -do_flint       	Enables flinting during compile.
+    -flint       	Enables flinting during compile.
     -target             Makefile target
     -mflags             Clearmake flags
     -cflags             Compile flags
-    -debug              Add compiler debug flags (same as -cflags=-g)
     -file               Compile with makefile given.
     -log                Enable logs for domain, module and file build.
-    -purify 	        Compile off-target builds with Purify.
-    -pure_coverage 	Compile off-target builds with Pure Coverage.
-    -guru 	        Generate Guru logs with compile.
     -keep_env	        Disables cleaning up environment variables.
     -clean
-    -use_wildcard	Search and run all the makefiles which match the wildcard pattern
-    -cscope             Instrument specified module for CoverageScope test.
-    -csflags            CoverageScope instrumentor options.
 
 Note:
 
@@ -1062,15 +891,10 @@ sub findBldFile
 sub verifyEnv
 {
     my $build      = shift;
-    my $debugLevel = 0;
 
-    if ($opt{verbose})
-    {
-        $debugLevel = 9;
-    }
     note "Main() found $build";
     
-    BldDecoder::ReadBLD($build, $debugLevel);
+    readBLD($build);
     
     $UTIL_ROOT      = $ENV{UTIL_ROOT};
     $ITE_ROOT       = $ENV{ITE_ROOT};
@@ -1109,6 +933,302 @@ sub verifyEnv
         $err = "ERROR: Environment variable TARGET is not defined.\n";
         die ($err);
     }
+}
+
+
+my %compareTable;
+BEGIN
+{
+    $compareTable{ $_} = eval "sub { \$_[ 0] $_ \$_[ 1]}" for
+        qw( eq ne == != ); # add more comparison operators as needed
+}
+
+#===========================================================================
+# evaluate an expr in string format and return 1 or none
+sub evalExpr {
+    my ( $operand1, $operator, $operand2) = split ' ', $_[ 0];
+    die "Unsupported comparison: $operator" unless
+	$compareTable{ $operator};
+    $operand1 = &expandVar($operand1);
+    $operand2 = &expandVar($operand2);
+    note "$operand1:$operand2 \n";
+    $compareTable{ $operator}->( $operand1, $operand2);
+}
+
+
+#===========================================================================
+# check the if condition.
+sub checkCondition {
+    my $expr = shift;
+    $ifCond = evalExpr($expr) if ($ifBit & 0x1);
+    $ifBit = ($ifBit << 1) + $ifCond;
+}
+
+
+#===========================================================================
+# FUNCTION:     readBLD($BldFilename, $DebugLevel)
+# DESCRIPTION:  Takes the BLD file, sets enviornment variables, and
+#               the path.  Returns (\%BLDdata, \%CMDLines).  
+#
+sub readBLD
+{
+    my $BLDname    = shift;
+
+    $BLDname = &expandVar($BLDname);
+    
+    # Initialize CMD and BLD data hash tables
+    my %CMDlines;
+    my %BLDdata;
+
+    # Get and open BLD file
+    if (defined($BLDname)) 
+    {
+        open (BLD, $BLDname) or die "BLD parser: Critical failure: BLD 
+        file \"$BLDname\" not found!!\nEnsure you gave a file to parse\n\n";
+    } 
+    else 
+    {
+        die "BLD parser: Critical failure:  BLD file not found!!\n
+        Ensure you gave a file to parse\n\n";
+    }
+
+    note "Working with BLD file : $BLDname";
+
+
+    # Parse the bpf makefile line by line
+    while (<BLD>) 
+    {
+        # Increment line number of BLD file.
+        ++$linenum;
+
+        # ignore comments and blank lines
+        if (/^\s*#/ || /^\s*$/) 
+        { 
+            next; 
+        }
+	
+        # Look for bad line types.  All lines should start with a # or have a :
+        if (! /:/) 
+        { 
+            die "BLD Decoder: Critical Error!\n** Line $linenum is 
+            incorrectly formatted!!\n** See the BLD guide for 
+            formatting instructions\n\n"; 
+        }  
+
+  
+        # Take line in BPF file and split data into tokens in the array
+        my $bpfline = $_;
+        chomp $bpfline;
+        my @data = split /\s*:\s*/, $bpfline;
+
+        # For each token, store in the $Type, $Key and $Value variable
+        # First token contains Type
+        my $Type = $data[0];
+	$Type =~ s/^ *//g;
+        my $Key;
+        my $Value;
+
+        # Second token contains Key
+        if (defined $data[1]) 
+        {
+            $Key = $data[1];
+        } 
+        else 
+        {
+            $Key = "";
+        } 
+
+        # Third token contains Value
+        if (defined $data[2]) 
+        {
+            $Value = $data[2];
+        } 
+        else 
+        {
+            $Value = "";
+        }
+        
+        # Any additional tokens are joined with Value
+        if (defined $data[3]) 
+        {
+            $Value = join ':', $Value, @data[3 .. $#data]; 
+        }
+
+        # If $Key or $Value begins with an angle bracket (<) then skip
+        if ($Value =~ /^</) 
+        { 
+            print "BPF decoder: Warning!\n** Line $linenum, Key \"$Key\" has 
+            no value.\n\n"; 
+            next;
+        }
+        if ($Key   =~ /^</) 
+        { 
+            print "BPF decoder: Warning!\n** Line $linenum, 
+            Type \"$data[0]\" has no Key or Value.\n\n"; 
+            next;
+        }
+
+	if (!$ifCond && ($Type ne "endif") && ($Type ne "if")){
+	   next;
+	}
+
+        # Depending on the $Key, set the appropriate value.
+        SWITCH: 
+        {
+            # Set the environment variable
+            if ($Type eq "envVar") 
+            { 
+                setEnvVar($Key, $Value);
+                last SWITCH; 
+            }
+
+            # Set the environment variable (same as envVar)
+            if ($Type eq "setenv") 
+            { 
+                setEnvVar($Key, $Value);
+                last SWITCH; 
+            }
+            
+            # Undefine the environment variable
+            if ($Type eq "unsetenv") 
+            { 
+                unSetEnvVar($Key);
+                last SWITCH; 
+            }
+            
+	    # read another bpf file
+	    if ($Type eq "include"){
+	        #Dup the filehandler
+	        local *SAVEHDR;
+		open SAVEHDR, "<&BLD";
+		
+		#Save the duplicated file handler in a typeglob array 
+		push @fileHandlers, *SAVEHDR;
+		
+		readBLD($Key);
+		
+		#recover the filehandle
+	        *BPF = pop @fileHandlers;
+		
+		last SWITCH;
+	    }
+
+	    # if condition
+	    if ($Type eq "if"){
+		checkCondition($Key);
+		note "if:$ifCond\n";
+		last SWITCH;
+	    }
+
+	    # if condition
+	    if ($Type eq "endif"){
+		note "endif:$ifCond\n";	    
+	        $ifBit >>= 1;
+		$ifCond = $ifBit & 0x1;
+		last SWITCH;
+	    }
+
+	    # echo
+	    if ($Type eq "echo"){
+		print "$Key\n";
+		last SWITCH;
+	    }
+
+	    # echo
+	    if ($Type eq "exit"){
+		exit($Key);
+		last SWITCH;
+	    }
+
+            # Default SWITCH rule
+            warn "Line $linenum contains an unknown type.
+            \n Valid types are: envVar, symLink, path, bldData";
+
+        } #end of SWITCH
+
+    } # end of while (<BLD>)
+
+    # Returns bldData and cmdLines as an array
+    return (\%BLDdata, \%CMDlines);
+}
+
+
+sub expandVar{
+    my $value = shift;
+
+    if ($value =~ /[\$\`]/){
+	$value = `echo $value`;
+    }
+
+    chomp($value);
+    return $value;
+}
+
+
+#===========================================================================
+# FUNCTION:     setEnvVar($EnvVar, $Value)
+# DESCRIPTION:  Sets $EnvVar to $Value in the environment.
+#
+sub setEnvVar  {
+    my $EnvVar = shift;
+    my $Value = shift;
+
+    note "Setting environment variables."; 
+    
+    if ($EnvVar eq "") 
+    { 
+        die "BPF decoder: Fatal Error!!\n** Line $linenum, 
+        Environment variable needs a name!\n** Line $linenum 
+        contains a type \"$EnvVar\" with no key name!!\n"; 
+    }
+    
+    if ($Value eq "") 
+    { 
+        print "BPF decoder: Warning!!\n** Setting environment 
+        variable \"$EnvVar\" to <NULL> (nothing)\n\n"; 
+    }
+
+    if ($ENV{$EnvVar} eq $EnvVar) 
+    { 
+        print "BPF decoder: Warning!!\n** Environment variable 
+        \"$EnvVar\" is currently set to \"$ENV{$EnvVar}\"\n** This will 
+        be overwritten with \"$Value\" for the duration of the build!!\n\n"; 
+    }
+
+    # Set environment variable "key" to "value".
+    $ENV{$EnvVar} = &expandVar($Value);
+    note "$EnvVar set to $ENV{$EnvVar}\n";
+}
+
+
+#===========================================================================
+# FUNCTION:     unSetEnvVar($EnvVar)
+# DESCRIPTION:  Sets $EnvVar to $Value in the environment.
+#
+sub unSetEnvVar  {
+    my $EnvVar = shift;
+    my $Value = shift;
+
+    note "Unsetting environment variables."; 
+    
+    if ($EnvVar eq "") 
+    { 
+        die "BPF decoder: Fatal Error!!\n** Line $linenum, 
+        Environment variable needs a name!\n** Line $linenum 
+        contains a type \"$EnvVar\" with no key name!!\n"; 
+    }
+    
+
+    if ($ENV{$EnvVar} eq $EnvVar) 
+    { 
+        print "BPF decoder: Warning!!\n** Environment variable 
+        \"$EnvVar\" is currently set to \"$ENV{$EnvVar}\"\n
+        ** This will be undefined for the duration of the build!!\n\n"; 
+    }
+
+    # Unset environment variable "key".
+    $ENV{$EnvVar} = &expandVar($Value);
+    note "$EnvVar undefined\n";
 }
 
 
@@ -1453,29 +1573,4 @@ sub cleanENV {
     }
 }    
 
-
-# TODO
-#===========================================================================
-# CoverageScope compatibility verification
-#
-# The following options, load type are not compatible with CoverageScope
-#    -pure_coverage
-#    off target load
-
-sub verifyCScopeCompat
-{
-    my $err = "";
-
-    if ($LOAD eq "off")
-    {
-	$err = "ERROR: Off-target load cannot use CoverageScope.\n";
-	die($err);
-    }
-
-    if ($purecoverage_used eq "true")
-    {
-	$err = "ERROR: Cannot specify both -pure_coverage and -cscope.\n";
-	die($err);
-    }
-}
 

@@ -10,7 +10,7 @@
 .PHONY: all
 all: $(BUILD_TARGET)
 	@ $(TIMESTAMP)
-	@ echo "FINISHED BUILDING:\n $?"
+	@ echo "FINISHED BUILDING: $(BUILD) in $(TARGET) "
 
 
 #==============================================================================
