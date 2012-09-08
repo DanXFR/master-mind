@@ -1,17 +1,16 @@
 #==============================================================================
-# rules.domain
+# rules.LinuxConsoleApp
 #
-# This file contains rules for building targets.
-#
+# This file contains rules for building target executables.
 #==============================================================================
 
-#==============================================================================
-# Generate Linked Target by default
-#==============================================================================
-
+#===============================================================================
+# Default rule
+#===============================================================================
 .PHONY: all
 all: $(BUILD_TARGET)
 	@ $(TIMESTAMP)
+	@ echo "FINISHED BUILDING:\n $?"
 
 
 #==============================================================================
@@ -35,25 +34,16 @@ all: $(BUILD_TARGET)
 # Build Flags
 #==============================================================================
 
-LDFLAGS := $(OPT_LD_STD) $(OPT_LD_CATEGORY) $(OPT_LD_EXTRA)
+LDFLAGS := $(OPT_LD_STD) $(OPT_LD_EXTRA)
 
 
 #==============================================================================
-# Create a list of module binaries
-#==============================================================================
-
-MODS_TO_BUILD += \
-              $(foreach mod, $(MODULES), \
-              $(CATEGORY_DIR)/module/$(mod)/bin/$(TARGET)/$(mod))
-
-
-#==============================================================================
-# This constructs a list of makefiles based on MODULES
+# This constructs a list of makefiles based on CATEGORIES
 #==============================================================================
 
 MAKEFILELIST += \
-             $(foreach mod, $(MODULES), \
-             $(CATEGORY_DIR)/module/$(mod)/bld/$(TARGET).mk)
+             $(foreach cat, $(CATEGORIES), \
+             $(MAP_ROOT)/$(TARGET)/category/$(cat)/bld/$(TARGET).mk)
 
 
 #==============================================================================
