@@ -26,7 +26,7 @@
 
 #include <iostream>
 #include <string>
-#include "CharSubstituteConfigure.h"
+#include "CharSubstituteConfigure.hpp"
 
 class CharSubstituter
 {
