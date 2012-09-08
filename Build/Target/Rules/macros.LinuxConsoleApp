@@ -59,6 +59,7 @@ OPT_LD_STD  := \
             -L$(LIB_DIR)
 SYSTEM_LIBS := \
             -lstdc++ \
+            -lncurses \
             -lxml2
 
 
