@@ -38,7 +38,6 @@ all: $(BUILD_TARGET)
 
 INCLUDE_STD := \
             -I/usr/include/libxml2 \
-            -I/usr/include/unitest++ \
             -I$(INC_DIR) \
             -I$(EXPORT_DIR)
 
@@ -179,7 +178,7 @@ clean:
 cleanlib:
 	$(RM) $(LIB_DIR)/*
 
-.PHONY: cleanlib
+.PHONY: cleanall
 cleanall: clean cleanlib
 	$(RM) $(BIN_DIR)/*
 

@@ -56,7 +56,7 @@ OPT_CXX_STD := \
 
 LD          := g++
 OPT_LD_STD  := \
-            -L$(LIB_DIR)
+            -L$(TEST_DIR)
 SYSTEM_LIBS := \
             -lstdc++ \
             -lunittest++ \

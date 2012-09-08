@@ -59,6 +59,7 @@ EXPORT_DIR   := $(CATEGORY_ROOT)/$(CATEGORY)/export
 SRC_DIR      := $(MOD_DIR)/src
 TEST_DIR     := $(MOD_DIR)/unittest
 BUILD_TARGET += $(BIN_DIR)/$(PROGRAM)
+TEST_TARGET  := $(TEST_DIR)/Test$(PROGRAM)
 # Ensure these are undefined
 CATEGORY     :=
 BUILD        :=
