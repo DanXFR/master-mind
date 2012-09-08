@@ -118,7 +118,6 @@ $(TEST_TARGET) : $(OBJS_TO_LINK) $(LIBS_TO_LINK)
 
 .PHONY: clean
 clean:
-	$(RM) $(OBJ_DIR)/*
 	$(RM) $(TEST_DIR)/*.otest
 #	$(RM) $(FLINT_DIR)/*
 
