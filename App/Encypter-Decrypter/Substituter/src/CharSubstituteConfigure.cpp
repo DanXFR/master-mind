@@ -25,7 +25,7 @@
 #include <string.h>
 #include <fstream>
 #include <locale>
-#include "CharSubstituteConfigure.h"
+#include "CharSubstituteConfigure.hpp"
 
 const std::string CharSubstituteConfigure::m_Name = "Character Substitution Configuration";
 

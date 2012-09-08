@@ -21,7 +21,7 @@
 /// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "CharSubstituter.h"
+#include "CharSubstituter.hpp"
 
 const std::string CharSubstituter::m_Name = "Character Substituter";
 
