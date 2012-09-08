@@ -30,8 +30,8 @@ setenv: OS:                  Linux
 setenv: CPU:                 i386
 setenv: UI:                  Console
 setenv: TOOL:                gnu
-setenv: BUILD_NAME:          LinuxConsoleApp
-setenv: TARGET:              LinuxConsoleApp
+setenv: BUILD_NAME:          LinuxUnittest
+setenv: TARGET:              LinuxUnittest
 
 setenv: BUILD_ROOT:          ${MASTERMIND_ROOT}
 setenv: MAP_ROOT:            ${BUILD_ROOT}/Build/Target

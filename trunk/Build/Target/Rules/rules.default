@@ -37,6 +37,8 @@ all: $(BUILD_TARGET)
 #==============================================================================
 
 INCLUDE_STD := \
+            -I/usr/include/libxml2 \
+            -I/usr/include/unitest++ \
             -I$(INC_DIR) \
             -I$(EXPORT_DIR)
 
