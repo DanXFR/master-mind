@@ -24,8 +24,8 @@
 #include <iostream>
 #include <string.h>
 #include <argp.h>
-#include "CharSubstituteConfigure.h"
-#include "CharSubstituter.h"
+#include "CharSubstituteConfigure.hpp"
+#include "CharSubstituter.hpp"
 
 static const std::string g_strAppName = "MasterMind Substituter";
 const char * argp_program_bug_address = "<Lissy.Lau@gmail.com>";
