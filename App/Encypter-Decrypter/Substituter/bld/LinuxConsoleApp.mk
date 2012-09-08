@@ -5,7 +5,7 @@
 # Module Name 
 #==============================================================================
 
-CATEGORY := Encypter-Decrypter
+CATEGORY := Encrypter-Decrypter
 MODULE   := Substituter
 
 include $(RULES_ROOT)/defs.$(TARGET)
