@@ -4,11 +4,8 @@
 #
 #==============================================================================
 
-# Defines target-specific variables
 include $(RULES_ROOT)/defs.$(TARGET)
-
-# Defines global variables applicable to all builds
-#include $(RULES_ROOT)/macros.default
+include $(RULES_ROOT)/macros.default
 
 
 #==============================================================================
@@ -38,6 +35,6 @@ EXTRA_LIB :=
 # Load build rules
 #==============================================================================
 
-#include $(RULES_ROOT)/LinuxConsoleApp.rules
+include $(RULES_ROOT)/rules.target
 
 
