@@ -1,5 +1,5 @@
 #==============================================================================
-# rules.default
+# rules.unittest
 #
 # This file contains rules for building targets.
 #
@@ -11,7 +11,7 @@
 
 .PHONY: all
 
-all: $(BUILD_TARGET)
+all: $(TEST_TARGET)
 	@$(TIMESTAMP)
 
 
@@ -38,7 +38,7 @@ all: $(BUILD_TARGET)
 
 INCLUDE_STD := \
             -I/usr/include/libxml2 \
-            -I/usr/include/unitest++ \
+            -I/usr/include/unittest++ \
             -I$(INC_DIR) \
             -I$(EXPORT_DIR)
 
@@ -56,89 +56,35 @@ DEFINES  := $(DEF_STD) $(DEF_MOD) $(DEF_CATEGORY) $(DEF_TARGET) $(DEF_EXTRA)
 INCLUDES := $(INCLUDE_STD) $(INCLUDE_MOD) $(INCLUDE_EXTRA)
 
 
-#===============================================================================
-# If LINK_ONLY is defined, then module libraries will be linked together 
-# without recompiling the objects. 
-# This is done by moving the libraries in OBJS_TO_LINK to LIBS_TO_LINK
-#
-# This is ORDER DEPENDENT!! OBJS_TO_LINK NEEDS TO BE FIRST in the link order.
-# as code is only pulled from an archive (.a) if it has already been referenced
-#===============================================================================
-
-ifdef LINK_ONLY
-    LIBS_TO_LINK := $(OBJS_TO_LINK) $(LIBS_TO_LINK)
-    OBJS_TO_LINK :=
-endif
-
-
 #==============================================================================
 # RULES FOR GENERATION OF VARIOUS MODULE OBJECTS
 #==============================================================================
 
 #==============================================================================
-# Rule: STANDARD MODULE OBJECT from ASSEMBLER in $(SRC_DIR)
-#
-
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.asm
-	@$(TIMESTAMP)
-	$(ASM) $(ASMFLAGS) $(DEFINES) $(INCLUDES) -o $@ $<;
-
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.src
-	@$(TIMESTAMP)
-	$(ASM) $(ASMFLAGS) $(DEFINES) $(INCLUDES) -o $@ $<;
-
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.s
-	@$(TIMESTAMP)
-	$(ASM) $(ASMFLAGS) $(DEFINES) $(INCLUDES) -o $@ $<;
-
-
-#==============================================================================
-# Rule: STANDARD MODULE OBJECT from C CODE in $(SRC_DIR)
+# Rule: TEST MODULE OBJECT from C++ CODE in $(TEST_DIR)
 #       Do not flint if AVOID_FLINT is defined.
 #
 
 ifdef FLINT
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.c $(INC_DIR)/%.h $(FLINT_DIR)/%.flint 
+$(TEST_DIR)/$Test(MODULE)_Main.otest: $(TEST_DIR)/Test$(MODULE)_Main.cpp $(FLINT_DIR)/%.flint
 else
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.c $(INC_DIR)/%.h
-endif
-	@$(TIMESTAMP)
-	$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@;
-
-
-#==============================================================================
-# Rule: STANDARD MODULE OBJECT from C++ CODE in $(SRC_DIR)
-#       Do not flint if AVOID_FLINT is defined.
-#
-
-ifdef FLINT
-$(OBJ_DIR)/$(MODULE)_Main.o: $(MOD_DIR)/$(MODULE)_Main.cpp $(FLINT_DIR)/%.flint
-else
-$(OBJ_DIR)/$(MODULE)_Main.o: $(MOD_DIR)/$(MODULE)_Main.cpp
+$(TEST_DIR)/$Test(MODULE)_Main.otest: $(TEST_DIR)/Test$(MODULE)_Main.cpp
 endif
 	@$(TIMESTAMP)
 	$(CXX) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@;
 
 ifdef FLINT
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cc $(INC_DIR)/%.hpp $(FLINT_DIR)/%.flint 
+$(TEST_DIR)/%.otest : $(TEST_DIR)/%.cpp $(FLINT_DIR)/%.flint 
 else
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cc $(INC_DIR)/%.hpp
+$(TEST_DIR)/%.otest : $(TEST_DIR)/%.cpp
 endif
 	@$(TIMESTAMP)
 	$(CXX) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@;
 
 ifdef FLINT
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp $(INC_DIR)/%.hpp $(FLINT_DIR)/%.flint 
+$(TEST_DIR)/%.otest : $(SRC_DIR)/%.cpp $(INC_DIR)/%.hpp $(FLINT_DIR)/%.flint 
 else
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp $(INC_DIR)/%.hpp
-endif
-	@$(TIMESTAMP)
-	$(CXX) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@;
-
-ifdef FLINT
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cxx $(INC_DIR)/%.hpp $(FLINT_DIR)/%.flint 
-else
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cxx $(INC_DIR)/%.hpp
+$(TEST_DIR)/%.otest : $(SRC_DIR)/%.cpp $(INC_DIR)/%.hpp
 endif
 	@$(TIMESTAMP)
 	$(CXX) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@;
@@ -149,19 +95,19 @@ endif
 #==============================================================================
 
 #==============================================================================
-# Rule: SHARED LIBRARY
+# Rule: STATIC LIBRARY
 #       
 
-$(LIB_DIR)/lib%.so : $(OBJ_DIR)/%.o 
+$(TEST_DIR)/lib%.a : $(TEST_DIR)/%.otest 
 	@$(TIMESTAMP)
-	$(LD) $(OPT_LD_STD) $(SYSTEM_LIBS) -shared -o $@ $<
+	$(AR) -rcs $@ $<
 
 
 #==============================================================================
-# Rule: BUILD TARGET
+# Rule: TEST TARGET
 #
 
-$(BUILD_TARGET) : $(OBJS_TO_LINK) $(LIBS_TO_LINK) 
+$(TEST_TARGET) : $(OBJS_TO_LINK) $(LIBS_TO_LINK) 
 	@$(TIMESTAMP)
 	$(LD) $(OPT_LD_STD) -o $@ $(OBJS_TO_LINK) $(OPT_LD_MOD) $(SYSTEM_LIBS)
 
@@ -173,26 +119,12 @@ $(BUILD_TARGET) : $(OBJS_TO_LINK) $(LIBS_TO_LINK)
 .PHONY: clean
 clean:
 	$(RM) $(OBJ_DIR)/*
+	$(RM) $(TEST_DIR)/*.otest
 #	$(RM) $(FLINT_DIR)/*
 
-.PHONY: cleanlib
-cleanlib:
-	$(RM) $(LIB_DIR)/*
-
-.PHONY: cleanlib
-cleanall: clean cleanlib
-	$(RM) $(BIN_DIR)/*
-
-
-#==============================================================================
-# Install Rule
-#
-
-.PHONY: install
-install:
-	$(MKDIR) $(INSTALL_BIN_PATH)
-	$(MKDIR) $(INSTALL_LIB_PATH)
-	$(CP) $(BUILD_TARGET) $(INSTALL_BIN_PATH)
-	$(CP) $(LIBS_TO_LINK) $(INSTALL_LIB_PATH)
+.PHONY:
+cleanall: clean
+	$(RM) $(LIBS_TO_LINK)
+	$(RM) $(TEST_TARGET)
 
 
