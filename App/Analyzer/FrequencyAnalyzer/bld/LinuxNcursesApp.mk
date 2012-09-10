@@ -44,7 +44,7 @@ INCLUDE_MOD :=
 #==============================================================================
 
 OBJS_TO_LINK := \
-             $(OBJ_DIR)/FrequencyAnalyzer_Console_Main.o
+             $(OBJ_DIR)/FrequencyAnalyzer_Ncurses_Main.o
  
 
 #==============================================================================
