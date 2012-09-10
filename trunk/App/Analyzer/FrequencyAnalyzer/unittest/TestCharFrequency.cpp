@@ -34,5 +34,8 @@ SUITE(CharFrequency)
         delete charFreq2;
         charFreq2 = NULL;
     }
+    TEST(getAlnum_Initial)
+    {
+    }
 }
 
