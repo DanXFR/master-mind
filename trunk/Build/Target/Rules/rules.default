@@ -111,6 +111,14 @@ endif
 #
 
 ifdef FLINT
+$(OBJ_DIR)/$(MODULE)_$(UI)_Main.o: $(MOD_DIR)/$(MODULE)_$(UI)_Main.cpp $(FLINT_DIR)/%.flint
+else
+$(OBJ_DIR)/$(MODULE)_$(UI)_Main.o: $(MOD_DIR)/$(MODULE)_$(UI)_Main.cpp
+endif
+	@$(TIMESTAMP)
+	$(CXX) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@;
+
+ifdef FLINT
 $(OBJ_DIR)/$(MODULE)_Main.o: $(MOD_DIR)/$(MODULE)_Main.cpp $(FLINT_DIR)/%.flint
 else
 $(OBJ_DIR)/$(MODULE)_Main.o: $(MOD_DIR)/$(MODULE)_Main.cpp

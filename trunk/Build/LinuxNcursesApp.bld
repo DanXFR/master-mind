@@ -28,7 +28,7 @@ unsetenv: BUILD:
 # Target Specific
 setenv: OS:                  Linux
 setenv: CPU:                 i386
-setenv: UI:                  ncurses
+setenv: UI:                  Ncurses
 setenv: TOOL:                gnu
 setenv: BUILD_NAME:          LinuxNcursesApp
 setenv: TARGET:              LinuxNcursesApp
